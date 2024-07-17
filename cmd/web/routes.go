@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/darkphotonKN/collabradoc/internal/docs"
+	"github.com/darkphotonKN/collabradoc/internal/user"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 )
@@ -28,6 +29,9 @@ func (app *application) routes() http.Handler {
 
 	// Docs Routes
 	mux.Get("/api/docs", docs.GetDocsList)
+
+	// Users Routes
+	mux.Get("/api/user", user.GetUsersHandler)
 
 	return mux
 }

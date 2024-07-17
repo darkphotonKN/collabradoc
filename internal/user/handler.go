@@ -6,8 +6,15 @@ import (
 	"net/http"
 )
 
-func GetUserList(w http.ResponseWriter, r *http.Request) {
-	testJson, err := json.Marshal("test")
+func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
+	users, err := GetUser()
+
+	if err != nil {
+		fmt.Println("Error when attempting to fetch all users.")
+	}
+
+	testJson, err := json.Marshal(users)
+
 	if err != nil {
 		fmt.Println(err)
 	}

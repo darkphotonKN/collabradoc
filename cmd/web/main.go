@@ -30,7 +30,7 @@ func (app *application) serve() error {
 
 func main() {
 	config := config{
-		port: 5000,
+		port: 5555,
 	}
 
 	app := &application{
