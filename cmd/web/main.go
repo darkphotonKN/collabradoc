@@ -2,18 +2,42 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"time"
+
+	"github.com/darkphotonKN/collabradoc/internal/db"
+	"github.com/darkphotonKN/collabradoc/internal/driver"
+	"github.com/darkphotonKN/collabradoc/internal/user"
+	"github.com/joho/godotenv"
 )
 
+type dbVars struct {
+	DBUser     string
+	DBPassword string
+	DBName     string
+	DBHost     string
+	DBPort     string
+}
+
+type dbCfg struct {
+	dsn string
+}
+
 type config struct {
-	port int
+	port string
+	db   dbCfg
 }
 
 type application struct {
-	config config
+	config   config
+	infoLog  *log.Logger
+	errorLog *log.Logger
+	DB       db.DBModel
 }
 
+// Set up Server
 func (app *application) serve() error {
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%d", app.config.port),
@@ -29,14 +53,43 @@ func (app *application) serve() error {
 }
 
 func main() {
+
+	// Load Environmental Variables
+	err := godotenv.Load()
+
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	// Setup Config
 	config := config{
-		port: 5555,
+		port: os.Getenv("APP_PORT"),
 	}
 
 	app := &application{
 		config: config,
 	}
 
-	// start server
+	// set up DSN
+	app.setDSN()
+
+	// Connecting to DB
+	db, err := driver.OpenDB(app.config.db.dsn)
+	log.Println("db:", db)
+
+	if err != nil {
+		log.Fatal("DB could not be connected to.")
+	}
+
+	fmt.Println("DB connected.")
+
+	// Auto Migration for Tables
+	err = db.AutoMigrate(&user.User{})
+
+	if err != nil {
+		log.Fatalf("Could not initialize DB table products.")
+	}
+
+	// Start Server
 	app.serve()
 }
