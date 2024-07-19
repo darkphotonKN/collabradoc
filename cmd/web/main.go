@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/darkphotonKN/collabradoc/internal/db"
-	"github.com/darkphotonKN/collabradoc/internal/driver"
 	"github.com/darkphotonKN/collabradoc/internal/user"
 	"github.com/joho/godotenv"
 )
@@ -34,13 +33,12 @@ type application struct {
 	config   config
 	infoLog  *log.Logger
 	errorLog *log.Logger
-	DB       db.DBModel
 }
 
 // Set up Server
 func (app *application) serve() error {
 	srv := &http.Server{
-		Addr:              fmt.Sprintf(":%d", app.config.port),
+		Addr:              fmt.Sprintf(":%s", app.config.port),
 		Handler:           app.routes(),
 		IdleTimeout:       30 * time.Second,
 		ReadTimeout:       10 * time.Second,
@@ -74,17 +72,16 @@ func main() {
 	app.setDSN()
 
 	// Connecting to DB
-	db, err := driver.OpenDB(app.config.db.dsn)
-	log.Println("db:", db)
+	db.Init(app.config.db.dsn)
+
+	// Perform migrations
+	err = db.DBCon.AutoMigrate(&user.User{})
 
 	if err != nil {
 		log.Fatal("DB could not be connected to.")
 	}
 
 	fmt.Println("DB connected.")
-
-	// Auto Migration for Tables
-	err = db.AutoMigrate(&user.User{})
 
 	if err != nil {
 		log.Fatalf("Could not initialize DB table products.")
