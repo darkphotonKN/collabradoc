@@ -31,8 +31,8 @@ func (app *application) routes() http.Handler {
 	mux.Get("/api/docs", docs.GetDocsList)
 
 	// Users Routes
-	mux.Get("/api/user", user.GetUsersHandler)
-	mux.Post("/api/user/signup", user.SignUp)
+	mux.Get("/api/users", user.GetUsersHandler)
+	mux.Post("/api/user/signup", user.SignUpHandler)
 
 	return mux
 }

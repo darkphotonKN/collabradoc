@@ -13,7 +13,7 @@ type Response[T any] struct {
 }
 
 func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
-	users, err := GetUser()
+	users, err := FindAllUsers()
 
 	if err != nil {
 		fmt.Println("Error when attempting to fetch all users.")
@@ -28,7 +28,7 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(testJson)
 }
 
-func SignUp(w http.ResponseWriter, r *http.Request) {
+func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	var user User
 
 	err := json.NewDecoder(r.Body).Decode(&user)

@@ -35,7 +35,7 @@ type application struct {
 	errorLog *log.Logger
 }
 
-// Set up Server
+// Set Up Server
 func (app *application) serve() error {
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%s", app.config.port),
@@ -74,7 +74,7 @@ func main() {
 	// Connecting to DB
 	db.Init(app.config.db.dsn)
 
-	// Perform migrations
+	// Perform Migrations
 	err = db.DBCon.AutoMigrate(&user.User{})
 
 	if err != nil {

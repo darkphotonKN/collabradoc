@@ -1,6 +1,12 @@
 package user
 
-func GetUser() ([]User, error) {
+func FindAllUsers() ([]User, error) {
 
-	return FindAllUsers()
+	return QueryAllUsers()
+}
+
+func SignUp(name string, email string, password string) (User, error) {
+
+	// TODO: HASH PASSWORD
+	return CreateUser(name, email, password)
 }

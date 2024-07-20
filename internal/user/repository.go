@@ -2,24 +2,18 @@ package user
 
 import "github.com/darkphotonKN/collabradoc/internal/db"
 
-func FindAllUsers() ([]User, error) {
-	// dummy data
-	usersData := []User{
-		User{
-			ID:       "1",
-			Name:     "Bob",
-			Email:    "bob@test.com",
-			Password: "123456",
-		},
-		User{
-			ID:       "2",
-			Name:     "Nick",
-			Email:    "nick@test.com",
-			Password: "123456",
-		},
+func QueryAllUsers() ([]User, error) {
+	db := db.DBCon
+
+	var users []User
+
+	result := db.Find(&users)
+
+	if result.Error != nil {
+		return users, result.Error
 	}
 
-	return usersData, nil
+	return users, nil
 }
 
 func CreateUser(name string, email string, password string) (User, error) {
@@ -27,9 +21,8 @@ func CreateUser(name string, email string, password string) (User, error) {
 	db := db.DBCon
 
 	newUser := User{
-		Name:  name,
-		Email: email,
-		// TODO: HASH PASSWORD
+		Name:     name,
+		Email:    email,
 		Password: password,
 	}
 	result := db.Create(&newUser)
