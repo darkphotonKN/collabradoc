@@ -51,7 +51,6 @@ func (app *application) serve() error {
 }
 
 func main() {
-
 	// Load Environmental Variables
 	err := godotenv.Load()
 

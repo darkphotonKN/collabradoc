@@ -3,6 +3,7 @@ package user
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -29,7 +30,7 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignUpHandler(w http.ResponseWriter, r *http.Request) {
-	var user User
+	var user UserRequest
 
 	err := json.NewDecoder(r.Body).Decode(&user)
 
@@ -39,7 +40,8 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// sign up and create user
-	var response Response[User]
+
+	log.Println("Creating user with password:", user.Password)
 
 	newUser, err := CreateUser(user.Name, user.Email, user.Password)
 
@@ -48,10 +50,17 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response = Response[User]{
+	// construct payload based on UserResponse type
+	response := Response[UserResponse]{
 		Status:  http.StatusCreated,
-		Message: "Created New User",
-		Data:    newUser,
+		Message: "Successfully created new user.",
+		Data: UserResponse{
+			ID:        newUser.ID,
+			Name:      newUser.Name,
+			Email:     newUser.Email,
+			CreatedAt: newUser.CreatedAt,
+			UpdatedAt: newUser.UpdatedAt,
+		},
 	}
 
 	out, err := json.Marshal(response)
