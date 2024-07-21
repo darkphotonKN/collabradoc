@@ -2,8 +2,11 @@ package user
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/darkphotonKN/collabradoc/internal/customerrors"
 )
 
 type Response[T any] struct {
@@ -31,6 +34,7 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)
 }
 
@@ -73,6 +77,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 	w.Write(out)
 }
 
@@ -83,23 +88,46 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, err := LoginUser(userLoginReq)
 
+	w.Header().Set("Content-Type", "application/json")
+
+	// if error is specifically the password incorrect error
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		var status int
+
+		switch {
+		case errors.Is(err, customerrors.PasswordIncorrectErr):
+			status = http.StatusUnauthorized
+
+		default:
+			status = http.StatusBadRequest
+		}
+
+		errRes := Response[error]{
+			Status:  status,
+			Message: err.Error(),
+			Data:    err,
+		}
+
+		out, _ := json.Marshal(errRes)
+
+		w.WriteHeader(status) // Set the HTTP status code
+		w.Write(out)
 		return
 	}
 
-	response := Response[User]{
+	// construct payload based on UserResponse type
+	response := Response[UserResponse]{
 		Status:  http.StatusOK,
-		Message: "Success.",
-		Data:    user,
+		Message: "Successfully logged in user.",
+		Data: UserResponse{
+			ID:        user.ID,
+			Name:      user.Name,
+			Email:     user.Email,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+		},
 	}
-
-	out, err := json.Marshal(response)
-
-	if err != nil {
-		fmt.Println(err)
-	}
+	out, _ := json.Marshal(response)
 
 	w.Write(out)
-
 }

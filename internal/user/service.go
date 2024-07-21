@@ -1,9 +1,9 @@
 package user
 
 import (
-	"errors"
 	"fmt"
 
+	"github.com/darkphotonKN/collabradoc/internal/customerrors"
 	"github.com/darkphotonKN/collabradoc/internal/utils"
 )
 
@@ -56,7 +56,7 @@ func LoginUser(userLoginReq UserLoginRequest) (User, error) {
 	authenticated := utils.CheckPasswordHash(userLoginReq.Password, user.Password)
 
 	if !authenticated {
-		return user, errors.New("Password entered was incorrect.")
+		return user, customerrors.PasswordIncorrectErr
 
 	}
 	return user, nil
