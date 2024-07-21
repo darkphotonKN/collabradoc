@@ -3,7 +3,6 @@ package user
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -20,13 +19,19 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error when attempting to fetch all users.")
 	}
 
-	testJson, err := json.Marshal(users)
+	response := Response[[]UserResponse]{
+		Status:  http.StatusOK,
+		Message: "Success.",
+		Data:    users,
+	}
+
+	out, err := json.Marshal(response)
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	w.Write(testJson)
+	w.Write(out)
 }
 
 func SignUpHandler(w http.ResponseWriter, r *http.Request) {
@@ -40,10 +45,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// sign up and create user
-
-	log.Println("Creating user with password:", user.Password)
-
-	newUser, err := CreateUser(user.Name, user.Email, user.Password)
+	newUser, err := SignUp(user.Name, user.Email, user.Password)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -72,4 +74,32 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)
+}
+
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	var userLoginReq UserLoginRequest
+
+	json.NewDecoder(r.Body).Decode(&userLoginReq)
+
+	user, err := LoginUser(userLoginReq)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	response := Response[User]{
+		Status:  http.StatusOK,
+		Message: "Success.",
+		Data:    user,
+	}
+
+	out, err := json.Marshal(response)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	w.Write(out)
+
 }
