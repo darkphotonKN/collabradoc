@@ -30,8 +30,17 @@ func FindAllUsers() ([]UserResponse, error) {
 	return usersResponse, err
 }
 
-// User Sign up
+// User Sign Up
 func SignUp(name string, email string, password string) (User, error) {
+	// check if user already exists
+	existingUser, err := FindUser(email)
+
+	// if user already exists, throw an error
+	if err == nil {
+		// return existing user and the err
+		return existingUser, customerrors.UserExistsErr
+	}
+
 	hashedPassword, err := utils.HashPassword(password)
 
 	if err != nil {
