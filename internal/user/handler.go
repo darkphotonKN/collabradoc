@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/darkphotonKN/collabradoc/internal/customerrors"
+	"github.com/go-playground/validator/v10"
 )
 
 type Response[T any] struct {
@@ -43,6 +44,14 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&user)
 
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// validation
+	validate := validator.New()
+	err = validate.Struct(user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
