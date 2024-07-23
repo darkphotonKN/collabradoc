@@ -5,6 +5,7 @@ import (
 
 	"github.com/darkphotonKN/collabradoc/internal/docs"
 	"github.com/darkphotonKN/collabradoc/internal/user"
+	"github.com/darkphotonKN/collabradoc/internal/ws"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 )
@@ -27,10 +28,13 @@ func (app *application) routes() http.Handler {
 	* - ROUTES -
 	*************************/
 
-	// Docs Routes
+	// -- WebSocket Routes --
+	mux.Get("/ws", ws.WsHandler)
+
+	// -- Docs Routes --
 	mux.Get("/api/docs", docs.GetDocsList)
 
-	// Users Routes
+	// -- Users Routes --
 	mux.Get("/api/users", user.GetUsersHandler)
 	mux.Post("/api/user/signup", user.SignUpHandler)
 	mux.Post("/api/user/login", user.LoginHandler)

@@ -9,6 +9,7 @@ import (
 
 	"github.com/darkphotonKN/collabradoc/internal/db"
 	"github.com/darkphotonKN/collabradoc/internal/user"
+	"github.com/darkphotonKN/collabradoc/internal/ws"
 	"github.com/joho/godotenv"
 )
 
@@ -51,6 +52,10 @@ func (app *application) serve() error {
 }
 
 func main() {
+	// TODO: remove after testing
+
+	ws.Testing()
+
 	// Load Environmental Variables
 	err := godotenv.Load()
 
