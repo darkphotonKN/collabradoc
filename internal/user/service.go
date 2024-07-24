@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/darkphotonKN/collabradoc/internal/customerrors"
-	"github.com/darkphotonKN/collabradoc/internal/utils"
+	"github.com/darkphotonKN/collabradoc/internal/utils/auth"
 )
 
 // Queries for all Users
@@ -41,7 +41,7 @@ func SignUp(name string, email string, password string) (User, error) {
 		return existingUser, customerrors.UserExistsErr
 	}
 
-	hashedPassword, err := utils.HashPassword(password)
+	hashedPassword, err := auth.HashPassword(password)
 
 	if err != nil {
 		fmt.Println("Error occured while hashing password:", err)
@@ -62,7 +62,7 @@ func LoginUser(userLoginReq UserLoginRequest) (User, error) {
 	}
 
 	// user is now found, check password match
-	authenticated := utils.CheckPasswordHash(userLoginReq.Password, user.Password)
+	authenticated := auth.CheckPasswordHash(userLoginReq.Password, user.Password)
 
 	if !authenticated {
 		return user, customerrors.PasswordIncorrectErr

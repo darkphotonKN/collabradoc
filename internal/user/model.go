@@ -2,15 +2,17 @@ package user
 
 import (
 	"time"
+
+	"github.com/darkphotonKN/collabradoc/internal/document"
+	"gorm.io/gorm"
 )
 
 type User struct {
-	ID        uint `gorm:"primaryKey" json:"id"`
-	Name      string
-	Email     string
-	Password  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	gorm.Model
+	Name     string
+	Email    string
+	Password string
+	Doc      []document.Document `gorm:"foreignKey:OwnerId"`
 }
 
 type UserRequest struct {

@@ -3,6 +3,7 @@ module github.com/darkphotonKN/collabradoc
 go 1.22.3
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-chi/chi v1.5.5 // indirect
 	github.com/go-chi/chi/v5 v5.1.0 // indirect
