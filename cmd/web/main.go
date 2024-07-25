@@ -10,6 +10,7 @@ import (
 	"github.com/darkphotonKN/collabradoc/internal/db"
 	"github.com/darkphotonKN/collabradoc/internal/document"
 	"github.com/darkphotonKN/collabradoc/internal/user"
+	"github.com/darkphotonKN/collabradoc/internal/utils/commprotocol"
 	"github.com/darkphotonKN/collabradoc/internal/ws"
 	"github.com/joho/godotenv"
 )
@@ -53,9 +54,9 @@ func (app *application) serve() error {
 }
 
 func main() {
-	// TODO: remove after testing
+	// TODO: remove after communicaton protocol testing
 
-	ws.Testing()
+	commprotocol.Testing()
 
 	// Load Environmental Variables
 	err := godotenv.Load()
@@ -91,6 +92,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not initialize DB table products.")
 	}
+
+	// start websocket listener goroutine
+
+	go ws.ListenForWSChannel()
 
 	// Start Server
 	app.serve()
