@@ -95,8 +95,11 @@ func ListenForWS(conn *WebSocketConnection) {
 		if err != nil {
 			// do nothing if there is an error
 		} else {
+
 			// handle new connection
 			payload.Conn = *conn
+
+			fmt.Printf("payload: %+v", payload)
 
 			// send payload back to websocket channel
 			wsChan <- payload
@@ -153,18 +156,18 @@ func ListenForWSChannel() {
 			event.Conn.WriteMessage(websocket.BinaryMessage, encodedMsg)
 
 			continue
+
 		default:
-			return
+			// responds events sent to the channel to all users
 
+			// not matching anything, we send back generic response
+			genericResponse.Value = fmt.Sprintf("Message received, action was %s. Value was: %s", event.Action, event.Value)
+			genericResponse.MessageType = "server_message"
+			// broadcast to all clients
+			broadcastToAll(genericResponse)
+			continue
 		}
-		// responds events sent to the channel to all users
 
-		// not matching anything, we send back generic response
-		genericResponse.Action = "event"
-		genericResponse.Value = fmt.Sprintf("Message received, action was %s. Value was: %s", event.Action, event.Value)
-		genericResponse.MessageType = "server_message"
-		// broadcast to all clients
-		broadcastToAll(genericResponse)
 	}
 }
 
