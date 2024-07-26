@@ -93,7 +93,7 @@ func ListenForWS(conn *WebSocketConnection) {
 		err := conn.ReadJSON(&payload)
 
 		if err != nil {
-			// do nothing if there is an error
+			fmt.Errorf("Error occured when reading payload from websocket %s", err)
 		} else {
 
 			// handle new connection
