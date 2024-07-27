@@ -12,6 +12,7 @@ type Document struct {
 }
 
 type CreateDocumentReq struct {
+	ID      uint   `json:"id" validate:"required"`
 	Title   string `json:"title" validate:"required"`
 	Content string `json:"content" validate:"required"`
 }

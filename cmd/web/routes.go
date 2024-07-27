@@ -33,6 +33,7 @@ func (app *application) routes() http.Handler {
 
 	// -- Docs Routes --
 	mux.Get("/api/docs", document.GetDocsList)
+	mux.Post("/api/docs", document.CreateDocHandler)
 
 	// -- Users Routes --
 	mux.Get("/api/users", user.GetUsersHandler)
