@@ -32,11 +32,11 @@ func (app *application) routes() http.Handler {
 	mux.Get("/ws", ws.WsHandler)
 
 	// -- Docs Routes --
-	mux.Get("/api/docs", document.GetDocsList)
-	mux.Post("/api/docs", document.CreateDocHandler)
+	mux.Get("/api/doc", document.GetDocumentsHandler)
+	mux.Post("/api/doc", document.CreateDocHandler)
 
 	// -- Users Routes --
-	mux.Get("/api/users", user.GetUsersHandler)
+	mux.Get("/api/user", user.GetUsersHandler)
 	mux.Post("/api/user/signup", user.SignUpHandler)
 	mux.Post("/api/user/login", user.LoginHandler)
 
