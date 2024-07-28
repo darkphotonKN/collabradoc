@@ -21,6 +21,15 @@ type UserRequest struct {
 	Password string `json:"password" validate:"required"`
 }
 
+type UserLoginResponse struct {
+	ID          uint      `json:"id"`
+	Name        string    `json:"name"`
+	Email       string    `json:"email"`
+	AccessToken string    `json:"access_token"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
 type UserResponse struct {
 	ID        uint      `json:"id"`
 	Name      string    `json:"name"`

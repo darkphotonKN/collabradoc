@@ -5,6 +5,7 @@ import (
 
 	"github.com/darkphotonKN/collabradoc/internal/document"
 	"github.com/darkphotonKN/collabradoc/internal/user"
+	"github.com/darkphotonKN/collabradoc/internal/utils/auth"
 	"github.com/darkphotonKN/collabradoc/internal/ws"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
@@ -32,11 +33,11 @@ func (app *application) routes() http.Handler {
 	mux.Get("/ws", ws.WsHandler)
 
 	// -- Docs Routes --
-	mux.Get("/api/doc", document.GetDocumentsHandler)
-	mux.Post("/api/doc", document.CreateDocHandler)
+	mux.With(auth.JWTMiddleware).Get("/api/doc", document.GetDocumentsHandler)
+	mux.With(auth.JWTMiddleware).Post("/api/doc", document.CreateDocHandler)
 
 	// -- Users Routes --
-	mux.Get("/api/user", user.GetUsersHandler)
+	mux.With(auth.JWTMiddleware).Get("/api/user", user.GetUsersHandler)
 	mux.Post("/api/user/signup", user.SignUpHandler)
 	mux.Post("/api/user/login", user.LoginHandler)
 

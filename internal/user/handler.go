@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/darkphotonKN/collabradoc/internal/customerrors"
+	"github.com/darkphotonKN/collabradoc/internal/utils/auth"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -125,15 +126,24 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// construct payload based on UserResponse type
-	response := Response[UserResponse]{
+
+	// generate jwt based on user's Id
+	jwtToken, err := auth.GenerateJWT(user.ID)
+
+	if err != nil {
+		fmt.Println("Error when attemping to generate jwt token.", jwtToken)
+	}
+
+	response := Response[UserLoginResponse]{
 		Status:  http.StatusOK,
 		Message: "Successfully logged in user.",
-		Data: UserResponse{
-			ID:        user.ID,
-			Name:      user.Name,
-			Email:     user.Email,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
+		Data: UserLoginResponse{
+			ID:          user.ID,
+			Name:        user.Name,
+			Email:       user.Email,
+			AccessToken: jwtToken,
+			CreatedAt:   user.CreatedAt,
+			UpdatedAt:   user.UpdatedAt,
 		},
 	}
 	out, _ := json.Marshal(response)
