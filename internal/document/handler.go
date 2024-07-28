@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/darkphotonKN/collabradoc/internal/utils/request"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -15,7 +16,10 @@ type Response[T any] struct {
 }
 
 func GetDocumentsHandler(w http.ResponseWriter, r *http.Request) {
-	documents, err := GetDocuments()
+	// get user id from context via jwt
+	userId, _ := request.ExtractUserID(r.Context())
+
+	documents, err := GetDocuments(userId)
 
 	if err != nil {
 		fmt.Println("Error when retrieving document list.")
@@ -40,7 +44,8 @@ func GetDocumentsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateDocHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Creating Document!")
+	// get user id from context via jwt
+	userId, _ := request.ExtractUserID(r.Context())
 
 	var req CreateDocumentReq
 
@@ -58,7 +63,7 @@ func CreateDocHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newDoc, err := CreateDocumentService(req)
+	newDoc, err := CreateDocumentService(req, userId)
 
 	fmt.Println("newDoc:", newDoc)
 

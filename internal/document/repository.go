@@ -5,11 +5,11 @@ import (
 	"github.com/darkphotonKN/collabradoc/internal/db"
 )
 
-func CreateDocument(doc CreateDocumentReq) (Document, error) {
+func CreateDocument(doc CreateDocumentReq, userId uint) (Document, error) {
 	db := db.DBCon
 
 	newDoc := Document{
-		OwnerId: doc.ID,
+		OwnerId: userId,
 		Title:   doc.Title,
 		Content: doc.Content,
 	}
@@ -24,12 +24,12 @@ func CreateDocument(doc CreateDocumentReq) (Document, error) {
 	return newDoc, nil
 }
 
-func QueryDocuments() ([]Document, error) {
+func QueryDocuments(userId uint) ([]Document, error) {
 	db := db.DBCon
 
 	var documents []Document
 
-	result := db.Find(&documents)
+	result := db.Where("owner_id = ?", userId).Find(&documents)
 
 	if result.Error != nil {
 		fmt.Println("result.Error:", result.Error)

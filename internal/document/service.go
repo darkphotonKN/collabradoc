@@ -1,10 +1,10 @@
 package document
 
-func CreateDocumentService(doc CreateDocumentReq) (Document, error) {
+func CreateDocumentService(doc CreateDocumentReq, userId uint) (Document, error) {
 
-	return CreateDocument(doc)
+	return CreateDocument(doc, userId)
 }
 
-func GetDocuments() ([]Document, error) {
-	return QueryDocuments()
+func GetDocuments(userId uint) ([]Document, error) {
+	return QueryDocuments(userId)
 }
