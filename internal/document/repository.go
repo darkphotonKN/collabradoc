@@ -2,7 +2,6 @@ package document
 
 import (
 	"fmt"
-
 	"github.com/darkphotonKN/collabradoc/internal/db"
 )
 
