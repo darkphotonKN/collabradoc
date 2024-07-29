@@ -41,8 +41,6 @@ func EncodeMessage[T any](action Action, value T) ([]byte, error) {
 	switch action {
 	case JOIN:
 		// new user joined, value will be user id
-		log.Println("New User Joined Editor")
-
 		if str, ok := any(value).(string); ok {
 
 			// write length of string in buffer
@@ -73,8 +71,6 @@ func EncodeMessage[T any](action Action, value T) ([]byte, error) {
 }
 
 func Testing() {
-	log.Println("Websockets Testing")
-
 	buf, err := EncodeMessage(JOIN, "JohnDoe")
 
 	if err != nil {

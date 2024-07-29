@@ -130,6 +130,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// generate jwt based on user's Id
 	jwtToken, err := auth.GenerateJWT(user.ID)
 
+	fmt.Println("jwt:", jwtToken)
+
 	if err != nil {
 		fmt.Println("Error when attemping to generate jwt token.", jwtToken)
 	}
