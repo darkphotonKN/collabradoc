@@ -54,10 +54,6 @@ func (app *application) serve() error {
 }
 
 func main() {
-	// TODO: remove after communicaton protocol testing
-
-	commprotocol.Testing()
-
 	// Load Environmental Variables
 	err := godotenv.Load()
 

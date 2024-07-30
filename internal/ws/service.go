@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/darkphotonKN/collabradoc/internal/types"
 	"github.com/darkphotonKN/collabradoc/internal/utils/commprotocol"
 	"github.com/gorilla/websocket"
 )
 
-func ListenForWS(conn *WebSocketConnection) {
+func ListenForWS(conn *types.WebSocketConnection) {
 	// logs error when the function stops and recovers
 	defer func() {
 		if r := recover(); r != nil {

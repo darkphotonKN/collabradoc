@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/darkphotonKN/collabradoc/internal/types"
 	"github.com/gorilla/websocket"
 )
 
@@ -11,7 +12,7 @@ import (
 var wsChan = make(chan WebSocketInfo)
 
 // track connected clients
-var clients = make(map[WebSocketConnection]string)
+var clients = make(map[types.WebSocketConnection]string)
 
 // response of payload sent back to clients via websocket
 type WebSocketResponse[T any] struct {
@@ -28,11 +29,7 @@ type WebSocketPayload struct {
 // For internal websocket tracking
 type WebSocketInfo struct {
 	WebSocketPayload
-	Conn WebSocketConnection
-}
-
-type WebSocketConnection struct {
-	*websocket.Conn
+	Conn types.WebSocketConnection
 }
 
 // for upgrading response writer / request connections
@@ -62,7 +59,7 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 	// client connected
 
 	// create new connection type and add them to list of connections
-	clientConnection := WebSocketConnection{
+	clientConnection := types.WebSocketConnection{
 		Conn: ws,
 	}
 	clients[clientConnection] = ""

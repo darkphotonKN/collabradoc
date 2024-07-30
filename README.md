@@ -29,4 +29,4 @@ The websocket setup is simple, setting up a single WS handler that servers each 
 
 The payloads are managed via a channel that recieves the payloads and are managed by another **goroutine** started at the root of the application. This goroutine will handle each channel message based on the pre-defined custom binary protocol.
 
-#### Custom Binary Communication Protocol
+### Custom Binary Communication Protocol
