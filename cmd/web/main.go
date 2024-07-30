@@ -54,6 +54,18 @@ func (app *application) serve() error {
 }
 
 func main() {
+	// TODO: remove after testing
+	users := []string{
+		"username1",
+		"username2",
+		"mary poppins",
+		"batman",
+		"ahsoka",
+		"anakin",
+	}
+
+	commprotocol.EncodeMessage(commprotocol.EDITORLIST, users)
+
 	// Load Environmental Variables
 	err := godotenv.Load()
 

@@ -32,17 +32,26 @@ func TestJoinEncoding(t *testing.T) {
 // User Joining Encoding Test
 func TestEditorListEncoding(t *testing.T) {
 
-	users := "username1,username2,mary poppins,batman,asohka,anakin"
+	usersList := []string{
+		"username1",
+		"username2",
+		"mary poppins",
+		"batman",
+		"ahsoka",
+		"anakin",
+	}
 
-	encodedMsg, err := commprotocol.EncodeMessage(commprotocol.EDITORLIST, users)
+	users := "username1,username2,mary poppins,batman,ahsoka,anakin"
+
+	encodedMsg, err := commprotocol.EncodeMessage(commprotocol.EDITORLIST, usersList)
 
 	if err != nil {
 		t.Error("Error occured when attemping to encode message")
 	}
 
 	expected := []byte{
-		0x14, // Action
-		6,    // Length of Users
+		0x14,        // Action
+		0, 0, 0, 53, // Length of Users in 4 bytes, matching the uint32 used in the encoding function
 	}
 
 	expected = append(expected, []byte(users)...)
