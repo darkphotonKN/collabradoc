@@ -29,9 +29,8 @@ func TestJoinEncoding(t *testing.T) {
 	}
 }
 
-// User Joining Encoding Test
+// Returning Editor List Encoding Test
 func TestEditorListEncoding(t *testing.T) {
-
 	usersList := []string{
 		"username1",
 		"username2",

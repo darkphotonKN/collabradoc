@@ -52,7 +52,6 @@ func ListenForWS(conn *types.WebSocketConnection) {
 // Listen to the WebSocket CHANNEL
 func ListenForWSChannel() {
 	log.Println("Started listening concurrently for websocket connections on a goroutine")
-	var genericResponse WebSocketResponse[any]
 
 	for {
 		// storing websocket payload coming from wsChan
@@ -65,22 +64,17 @@ func ListenForWSChannel() {
 
 		// Match based on Action
 		switch event.Action {
-		case "client_list":
-			log.Printf("client %s joining game.", event.Value)
-
-			genericResponse.Action = "join_game"
-
-			// add user to list of client connections
-			clients[event.Conn] = event.Value // add user to map
+		case "editor_list":
 
 			// get list of client for user
-			genericResponse = getclientsListRes()
-			broadcastToAll(genericResponse)
+			list := getEditorList()
+			broadcastToAll(list)
 
 			// skip rest of function and continue listening for further websocket messages
 			continue
-		case "join_game":
-			// add them to the connection
+
+		case "join_doc":
+			// add them to the current pool of live doc editors
 			clients[event.Conn] = event.Value
 
 			// encode message to binary
@@ -100,35 +94,33 @@ func ListenForWSChannel() {
 			// responds events sent to the channel to all users
 
 			// not matching anything, we send back generic response
-			genericResponse.Value = fmt.Sprintf("Message received, action was %s. Value was: %s", event.Action, event.Value)
-			genericResponse.Action = "server_message"
-			// broadcast to all clients
-			broadcastToAll(genericResponse)
 			continue
 		}
 	}
 }
 
 // get the clients list and package it to fit action and message
-func getclientsListRes() WebSocketResponse[any] {
-	var clientsNameList []string
+func getEditorList() []byte {
+	editorUsernames := make([]string, len(clients))
 
-	// convert clients map into slice of names
-	for _, name := range clients {
-		log.Println("client", name)
-		clientsNameList = append(clientsNameList, name)
+	// convert clients map to a slice of strings (usernames)
+	for _, username := range clients { // forgo key which is the WS connection
+		editorUsernames = append(editorUsernames, username)
 	}
 
-	clientListRes := WebSocketResponse[any]{
-		Action: "client_list",
-		Value:  clientsNameList,
+	// encode slice of usernames
+	encodedEditorUsernames, err := commprotocol.EncodeMessage(commprotocol.EDITOR_LIST, 2)
+
+	if err != nil {
+		fmt.Printf("Error when attempting to encode %v, error was %v", editorUsernames, err)
 	}
 
-	return clientListRes
+	// return encoded
+	return encodedEditorUsernames
 }
 
 // Broadcast to all users
-func broadcastToAll(message WebSocketResponse[any]) {
+func broadcastToAll(message []byte) {
 	// loop through all connected clients and broadcast to them
 	for clientWS := range clients {
 

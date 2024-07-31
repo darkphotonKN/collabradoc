@@ -10,7 +10,6 @@ import (
 	"github.com/darkphotonKN/collabradoc/internal/db"
 	"github.com/darkphotonKN/collabradoc/internal/document"
 	"github.com/darkphotonKN/collabradoc/internal/user"
-	"github.com/darkphotonKN/collabradoc/internal/utils/commprotocol"
 	"github.com/darkphotonKN/collabradoc/internal/ws"
 	"github.com/joho/godotenv"
 )
@@ -54,18 +53,6 @@ func (app *application) serve() error {
 }
 
 func main() {
-	// TODO: remove after testing
-	users := []string{
-		"username1",
-		"username2",
-		"mary poppins",
-		"batman",
-		"ahsoka",
-		"anakin",
-	}
-
-	commprotocol.EncodeMessage(commprotocol.EDITORLIST, users)
-
 	// Load Environmental Variables
 	err := godotenv.Load()
 

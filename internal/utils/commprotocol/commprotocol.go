@@ -19,11 +19,11 @@ import (
 type Action int
 
 const (
-	JOIN       Action = 0x12
-	LEAVE      Action = 0x13
-	EDITORLIST Action = 0x14
-	EDIT       Action = 0x15
-	DOCUMENT   Action = 0x16
+	JOIN        Action = 0x12
+	LEAVE       Action = 0x13
+	EDITOR_LIST Action = 0x14
+	EDIT        Action = 0x15
+	SERVER_MSG  Action = 0x16
 )
 
 func EncodeMessage[T any](action Action, value T) ([]byte, error) {
@@ -66,13 +66,10 @@ func EncodeMessage[T any](action Action, value T) ([]byte, error) {
 
 	// provides current users that can edit the document
 	// encoding structure: [action] - [byte length] - [users []byte separated by ","]
-	case EDITORLIST:
-		fmt.Printf("inital buffer %v\n", buf.Bytes())
+	case EDITOR_LIST:
 		// so value will be a map of current users
 
 		if mapOfUsers, ok := any(value).([]string); ok {
-
-			fmt.Printf("mapOfUsers %v\n", mapOfUsers)
 
 			usersBytes := make([][]byte, len(mapOfUsers))
 
@@ -80,22 +77,15 @@ func EncodeMessage[T any](action Action, value T) ([]byte, error) {
 				// convert user to byte and store it
 				usersBytes[i] = []byte(user)
 			}
-			fmt.Printf("usersBytes %v\n", usersBytes)
 
 			usersBytesJoined := bytes.Join(usersBytes, []byte(","))
-
-			fmt.Printf("usersBytesJoined %v\n", usersBytesJoined)
 
 			// [byte length]: write the length to the next spot after action
 			length := uint32(len(usersBytesJoined))
 			binary.Write(&buf, binary.BigEndian, length)
 
-			fmt.Printf("binary after writing length %v\n", buf.Bytes())
-
 			// [users []byte separated by ","]: write the users in bytes with delimiter
 			buf.Write(usersBytesJoined)
-
-			fmt.Printf("binary after writing userBytesJoined %v\n", buf.Bytes())
 		} else {
 			// handle the case its not a map of the correct type
 			return nil, fmt.Errorf("expected value to be a slice of type \"string\"  for action: %d", action)
