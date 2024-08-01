@@ -23,7 +23,7 @@ const (
 	LEAVE       Action = 0x13
 	EDITOR_LIST Action = 0x14
 	EDIT        Action = 0x15
-	SERVER_MSG  Action = 0x16
+	SYSTEM_MSG  Action = 0x16
 )
 
 func EncodeMessage[T any](action Action, value T) ([]byte, error) {
@@ -41,7 +41,7 @@ func EncodeMessage[T any](action Action, value T) ([]byte, error) {
 
 	// user joins or leaves document to collaborate in editing
 	// encoding structure: [action] - [string length] - [username string]
-	case JOIN, LEAVE:
+	case JOIN, LEAVE, SYSTEM_MSG:
 		// will be user id so will be type string
 		if str, ok := any(value).(string); ok {
 
@@ -68,7 +68,6 @@ func EncodeMessage[T any](action Action, value T) ([]byte, error) {
 	// encoding structure: [action] - [byte length] - [users []byte separated by ","]
 	case EDITOR_LIST:
 		// so value will be a map of current users
-
 		if mapOfUsers, ok := any(value).([]string); ok {
 
 			usersBytes := make([][]byte, len(mapOfUsers))

@@ -61,14 +61,20 @@ func ListenForWSChannel() {
 
 		log.Println("event received:", event)
 		// TODO: Decode to figure out action and value
-
 		// Match based on Action
 		switch event.Action {
 		case "editor_list":
 
 			// get list of client for user
-			list := getEditorList()
-			broadcastToAll(list)
+			list, err := getEditorList()
+
+			if err != nil {
+				encodedErrMsg, _ := commprotocol.EncodeMessage(commprotocol.SYSTEM_MSG, fmt.Sprintf("Error when retrieving list of users: %v", err))
+
+				event.Conn.WriteMessage(websocket.BinaryMessage, encodedErrMsg)
+			}
+
+			broadcastToAllClients(list)
 
 			// skip rest of function and continue listening for further websocket messages
 			continue
@@ -85,8 +91,20 @@ func ListenForWSChannel() {
 				log.Printf("Error occured when attempting to encode message %s, err was %s", event.Value, err)
 			}
 
-			// send binary message back to user
-			event.Conn.WriteMessage(websocket.BinaryMessage, encodedMsg)
+			// get current editor client list in binary
+			encodedEditors, err := getEditorList()
+
+			if err != nil {
+				encodedErrMsg, _ := commprotocol.EncodeMessage(commprotocol.SYSTEM_MSG, fmt.Sprintf("Error when retrieving list of users: %v", err))
+
+				event.Conn.WriteMessage(websocket.BinaryMessage, encodedErrMsg)
+			}
+
+			// send binary message to all users saying who has joined
+			broadcastToAllClients(encodedMsg)
+
+			// send list of current editors back to all clients
+			broadcastToAllClients(encodedEditors)
 
 			continue
 
@@ -100,11 +118,12 @@ func ListenForWSChannel() {
 }
 
 // get the clients list and package it to fit action and message
-func getEditorList() []byte {
+func getEditorList() ([]byte, error) {
 	editorUsernames := make([]string, len(clients))
 
 	// convert clients map to a slice of strings (usernames)
 	for _, username := range clients { // forgo key which is the WS connection
+		fmt.Printf("debug username in client list was %s \n", username)
 		editorUsernames = append(editorUsernames, username)
 	}
 
@@ -113,28 +132,23 @@ func getEditorList() []byte {
 
 	if err != nil {
 		fmt.Printf("Error when attempting to encode %v, error was %v", editorUsernames, err)
+		return nil, err
 	}
 
 	// return encoded
-	return encodedEditorUsernames
+	return encodedEditorUsernames, nil
 }
 
-// Broadcast to all users
-func broadcastToAll(message []byte) {
-	// loop through all connected clients and broadcast to them
-	for clientWS := range clients {
+func broadcastToAllClients(encodedMsg []byte) {
+	for wsConn := range clients {
+		err := wsConn.Conn.WriteMessage(websocket.BinaryMessage, encodedMsg)
 
-		err := clientWS.WriteJSON(message)
-
-		// handle if client errored / disconnected
 		if err != nil {
-			log.Println("Websocket errored")
+			// close connection if that write failed
+			wsConn.Conn.Close()
 
-			// close their WS connection
-			_ = clientWS.Close()
-
-			// remove the client that errored
-			delete(clients, clientWS)
+			// delete from client list
+			delete(clients, wsConn)
 		}
 	}
 }

@@ -42,7 +42,7 @@ func TestEditorListEncoding(t *testing.T) {
 
 	users := "username1,username2,mary poppins,batman,ahsoka,anakin"
 
-	encodedMsg, err := commprotocol.EncodeMessage(commprotocol.EDITORLIST, usersList)
+	encodedMsg, err := commprotocol.EncodeMessage(commprotocol.EDITOR_LIST, usersList)
 
 	if err != nil {
 		t.Error("Error occured when attemping to encode message")
