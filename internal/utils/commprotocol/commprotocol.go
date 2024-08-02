@@ -67,12 +67,12 @@ func EncodeMessage[T any](action Action, value T) ([]byte, error) {
 	// provides current users that can edit the document
 	// encoding structure: [action] - [byte length] - [users []byte separated by ","]
 	case EDITOR_LIST:
-		// so value will be a map of current users
-		if mapOfUsers, ok := any(value).([]string); ok {
+		// so value will be a slice of current users
+		if users, ok := any(value).([]string); ok {
 
-			usersBytes := make([][]byte, len(mapOfUsers))
+			usersBytes := make([][]byte, len(users))
 
-			for i, user := range mapOfUsers {
+			for i, user := range users {
 				// convert user to byte and store it
 				usersBytes[i] = []byte(user)
 			}
