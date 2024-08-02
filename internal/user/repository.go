@@ -50,3 +50,17 @@ func FindUser(email string) (User, error) {
 
 	return user, nil
 }
+
+// Queries for a single user based on ID
+func FindUserById(id uint) (User, error) {
+	db := db.DBCon
+
+	var user User
+	result := db.First(&user, "id = ?", id)
+
+	if result.Error != nil {
+		return user, result.Error
+	}
+
+	return user, nil
+}

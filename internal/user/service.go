@@ -70,3 +70,7 @@ func LoginUser(userLoginReq UserLoginRequest) (User, error) {
 	}
 	return user, nil
 }
+
+func FindUserByIdService(id uint) (User, error) {
+	return FindUserById(id)
+}

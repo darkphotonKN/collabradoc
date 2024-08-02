@@ -145,6 +145,8 @@ func ListenForWSChannel() {
 // get the clients list and package it to fit action and message
 func getEditorList() ([]byte, error) {
 	editorUsernames := make([]string, len(clients))
+
+	fmt.Printf("editorUsernames length: %d\n", len(clients))
 	fmt.Printf("clients before decoding: %v\n", clients)
 
 	// convert clients map to a slice of strings (usernames)

@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/darkphotonKN/collabradoc/internal/comment"
 	"github.com/darkphotonKN/collabradoc/internal/db"
 	"github.com/darkphotonKN/collabradoc/internal/document"
 	"github.com/darkphotonKN/collabradoc/internal/user"
@@ -79,7 +80,7 @@ func main() {
 	db.Init(app.config.db.dsn)
 
 	// Perform Migrations
-	err = db.DBCon.AutoMigrate(&user.User{}, &document.Document{})
+	err = db.DBCon.AutoMigrate(&user.User{}, &document.Document{}, &comment.Comment{})
 
 	if err != nil {
 		log.Fatal("DB could not be connected to.")

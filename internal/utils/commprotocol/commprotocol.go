@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"strings"
 )
 
 /**
@@ -69,6 +70,10 @@ func EncodeMessage[T any](action Action, value T) ([]byte, error) {
 	case EDITOR_LIST:
 		// so value will be a slice of current users
 		if users, ok := any(value).([]string); ok {
+
+			fmt.Println("joining:", users)
+			userString := strings.Join(users, ",")
+			fmt.Println("userString:", userString)
 
 			usersBytes := make([][]byte, len(users))
 
