@@ -2,13 +2,14 @@ package user
 
 import (
 	"github.com/darkphotonKN/collabradoc/internal/db"
+	model "github.com/darkphotonKN/collabradoc/internal/shared"
 )
 
 // Queries for all Current Users in the DB
-func QueryAllUsers() ([]User, error) {
+func QueryAllUsers() ([]model.User, error) {
 	db := db.DBCon
 
-	var users []User
+	var users []model.User
 
 	result := db.Find(&users)
 
@@ -20,10 +21,10 @@ func QueryAllUsers() ([]User, error) {
 }
 
 // Creates a Single User
-func CreateUser(name string, email string, password string) (User, error) {
+func CreateUser(name string, email string, password string) (model.User, error) {
 	db := db.DBCon
 
-	newUser := User{
+	newUser := model.User{
 		Name:     name,
 		Email:    email,
 		Password: password,
@@ -38,10 +39,10 @@ func CreateUser(name string, email string, password string) (User, error) {
 }
 
 // Queries for a Single User based on ID from the DB
-func FindUser(email string) (User, error) {
+func FindUser(email string) (model.User, error) {
 	db := db.DBCon
 
-	var user User
+	var user model.User
 	result := db.First(&user, "email = ?", email)
 
 	if result.Error != nil {
@@ -52,10 +53,10 @@ func FindUser(email string) (User, error) {
 }
 
 // Queries for a single user based on ID
-func FindUserById(id uint) (User, error) {
+func FindUserById(id uint) (model.User, error) {
 	db := db.DBCon
 
-	var user User
+	var user model.User
 	result := db.First(&user, "id = ?", id)
 
 	if result.Error != nil {

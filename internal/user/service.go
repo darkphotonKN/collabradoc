@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/darkphotonKN/collabradoc/internal/customerrors"
+	model "github.com/darkphotonKN/collabradoc/internal/shared"
 	"github.com/darkphotonKN/collabradoc/internal/utils/auth"
 )
 
@@ -31,7 +32,7 @@ func FindAllUsers() ([]UserResponse, error) {
 }
 
 // User Sign Up
-func SignUp(name string, email string, password string) (User, error) {
+func SignUp(name string, email string, password string) (model.User, error) {
 	// check if user already exists
 	existingUser, err := FindUser(email)
 
@@ -46,13 +47,13 @@ func SignUp(name string, email string, password string) (User, error) {
 	if err != nil {
 		fmt.Println("Error occured while hashing password:", err)
 
-		return User{}, err
+		return model.User{}, err
 	}
 	return CreateUser(name, email, string(hashedPassword))
 }
 
 // User Login
-func LoginUser(userLoginReq UserLoginRequest) (User, error) {
+func LoginUser(userLoginReq UserLoginRequest) (model.User, error) {
 
 	// find user in database
 	user, err := FindUser(userLoginReq.Email)
@@ -71,6 +72,6 @@ func LoginUser(userLoginReq UserLoginRequest) (User, error) {
 	return user, nil
 }
 
-func FindUserByIdService(id uint) (User, error) {
+func FindUserByIdService(id uint) (model.User, error) {
 	return FindUserById(id)
 }

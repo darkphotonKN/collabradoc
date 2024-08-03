@@ -5,15 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
+	model "github.com/darkphotonKN/collabradoc/internal/shared"
 	"github.com/darkphotonKN/collabradoc/internal/utils/request"
 	"github.com/go-playground/validator/v10"
 )
-
-type Response[T any] struct {
-	Status  int    `json:"status"`
-	Message string `json:"message"`
-	Data    T      `json:"data"`
-}
 
 func GetDocumentsHandler(w http.ResponseWriter, r *http.Request) {
 	// get user id from context via jwt
@@ -26,7 +21,7 @@ func GetDocumentsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	documentsRes := Response[[]Document]{
+	documentsRes := model.Response[[]model.Document]{
 		Status:  http.StatusOK,
 		Message: "Succesfully retrieved all documents.",
 		Data:    documents,
@@ -72,7 +67,7 @@ func CreateDocHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newDocRes := Response[Document]{
+	newDocRes := model.Response[model.Document]{
 		Status:  http.StatusCreated,
 		Message: "Successfully created new document.",
 		Data:    newDoc,

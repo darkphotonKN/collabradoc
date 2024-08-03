@@ -1,10 +1,18 @@
 package comment
 
-import "github.com/darkphotonKN/collabradoc/internal/user"
+import (
+	model "github.com/darkphotonKN/collabradoc/internal/shared"
+	"github.com/darkphotonKN/collabradoc/internal/user"
+)
 
-func CreateCommentService(createCommentReq CreateCommentReq, userId uint) (Comment, error) {
+func CreateCommentService(createCommentReq CreateCommentReq, userId uint) (model.Comment, error) {
 	// find if user exists
-	user.FindUserByIdService(userId)
+	user, err := user.FindUserByIdService(userId)
 
-	return CreateComment(createCommentReq)
+	// user doesn't exist
+	if err != nil {
+		return model.Comment{}, err
+	}
+
+	return CreateComment(createCommentReq, user)
 }

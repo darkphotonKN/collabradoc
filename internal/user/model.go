@@ -2,18 +2,7 @@ package user
 
 import (
 	"time"
-
-	"github.com/darkphotonKN/collabradoc/internal/document"
-	"gorm.io/gorm"
 )
-
-type User struct {
-	gorm.Model
-	Name     string
-	Email    string
-	Password string
-	Doc      []document.Document `gorm:"foreignKey:OwnerId"`
-}
 
 type UserRequest struct {
 	Name     string `json:"name" validate:"required"`

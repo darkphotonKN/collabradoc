@@ -7,15 +7,10 @@ import (
 	"net/http"
 
 	"github.com/darkphotonKN/collabradoc/internal/customerrors"
+	model "github.com/darkphotonKN/collabradoc/internal/shared"
 	"github.com/darkphotonKN/collabradoc/internal/utils/auth"
 	"github.com/go-playground/validator/v10"
 )
-
-type Response[T any] struct {
-	Status  int    `json:"status"`
-	Message string `json:"message"`
-	Data    T      `json:"data"`
-}
 
 func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	users, err := FindAllUsers()
@@ -24,7 +19,7 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error when attempting to fetch all users.")
 	}
 
-	response := Response[[]UserResponse]{
+	response := model.Response[[]UserResponse]{
 		Status:  http.StatusOK,
 		Message: "Success.",
 		Data:    users,
@@ -67,7 +62,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// construct payload based on UserResponse type
-	response := Response[UserResponse]{
+	response := model.Response[UserResponse]{
 		Status:  http.StatusCreated,
 		Message: "Successfully created new user.",
 		Data: UserResponse{
@@ -112,7 +107,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			status = http.StatusBadRequest
 		}
 
-		errRes := Response[error]{
+		errRes := model.Response[error]{
 			Status:  status,
 			Message: err.Error(),
 			Data:    err,
@@ -136,7 +131,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error when attemping to generate jwt token.", jwtToken)
 	}
 
-	response := Response[UserLoginResponse]{
+	response := model.Response[UserLoginResponse]{
 		Status:  http.StatusOK,
 		Message: "Successfully logged in user.",
 		Data: UserLoginResponse{

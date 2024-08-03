@@ -2,13 +2,15 @@ package document
 
 import (
 	"fmt"
+
 	"github.com/darkphotonKN/collabradoc/internal/db"
+	model "github.com/darkphotonKN/collabradoc/internal/shared"
 )
 
-func CreateDocument(doc CreateDocumentReq, userId uint) (Document, error) {
+func CreateDocument(doc CreateDocumentReq, userId uint) (model.Document, error) {
 	db := db.DBCon
 
-	newDoc := Document{
+	newDoc := model.Document{
 		OwnerId: userId,
 		Title:   doc.Title,
 		Content: doc.Content,
@@ -24,10 +26,10 @@ func CreateDocument(doc CreateDocumentReq, userId uint) (Document, error) {
 	return newDoc, nil
 }
 
-func QueryDocuments(userId uint) ([]Document, error) {
+func QueryDocuments(userId uint) ([]model.Document, error) {
 	db := db.DBCon
 
-	var documents []Document
+	var documents []model.Document
 
 	result := db.Where("owner_id = ?", userId).Find(&documents)
 

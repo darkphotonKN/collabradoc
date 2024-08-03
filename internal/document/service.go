@@ -1,10 +1,12 @@
 package document
 
-func CreateDocumentService(doc CreateDocumentReq, userId uint) (Document, error) {
+import model "github.com/darkphotonKN/collabradoc/internal/shared"
+
+func CreateDocumentService(doc CreateDocumentReq, userId uint) (model.Document, error) {
 
 	return CreateDocument(doc, userId)
 }
 
-func GetDocuments(userId uint) ([]Document, error) {
+func GetDocuments(userId uint) ([]model.Document, error) {
 	return QueryDocuments(userId)
 }
