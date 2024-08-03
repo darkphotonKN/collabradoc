@@ -62,7 +62,9 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 	clientConnection := types.WebSocketConnection{
 		Conn: ws,
 	}
-	clients[clientConnection] = ""
+
+	// initialize connection for client but don't allocate username until acquired
+	// clients[clientConnection] = ""
 
 	// start goroutine thread to listen to all future incoming payloads
 	go ListenForWS(&clientConnection)

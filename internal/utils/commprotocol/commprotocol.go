@@ -72,6 +72,7 @@ func EncodeMessage[T any](action Action, value T) ([]byte, error) {
 		if users, ok := any(value).([]string); ok {
 
 			fmt.Println("joining:", users)
+			fmt.Println("users length:", len(users))
 			userString := strings.Join(users, ",")
 			fmt.Println("userString:", userString)
 

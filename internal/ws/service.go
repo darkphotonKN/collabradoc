@@ -80,7 +80,7 @@ func ListenForWSChannel() {
 
 			// storing websocket payload coming from wsChan
 
-			log.Println("event received:", event)
+			log.Println("event value received:", event.Value)
 			// TODO: Decode to figure out action and value
 			// Match based on Action
 			switch event.Action {
@@ -101,6 +101,7 @@ func ListenForWSChannel() {
 				continue
 
 			case "join_doc":
+				fmt.Printf("ADDING CLIENT with CONNECTION %v and NAME %s", event.Conn, event.Value)
 				// add them to the current pool of live doc editors
 				clients[event.Conn] = event.Value
 
@@ -144,9 +145,9 @@ func ListenForWSChannel() {
 
 // get the clients list and package it to fit action and message
 func getEditorList() ([]byte, error) {
-	editorUsernames := make([]string, len(clients))
+	editorUsernames := make([]string, 0, len(clients)) // pre-allocate the size but initialize at 0
 
-	fmt.Printf("editorUsernames length: %d\n", len(clients))
+	fmt.Printf("editorUsernames length: %d\n", len(editorUsernames))
 	fmt.Printf("clients before decoding: %v\n", clients)
 
 	// convert clients map to a slice of strings (usernames)
@@ -154,6 +155,9 @@ func getEditorList() ([]byte, error) {
 		fmt.Printf("debug username in client list was %s \n", username)
 		editorUsernames = append(editorUsernames, username)
 	}
+
+	fmt.Printf("editorUsernames after: %v\n", editorUsernames)
+	fmt.Printf("editorUsernames length after: %v\n", len(editorUsernames))
 
 	// encode slice of usernames
 	encodedEditorUsernames, err := commprotocol.EncodeMessage(commprotocol.EDITOR_LIST, editorUsernames)
