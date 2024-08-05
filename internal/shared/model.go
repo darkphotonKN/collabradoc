@@ -4,25 +4,27 @@ import "gorm.io/gorm"
 
 type Document struct {
 	gorm.Model
-	Title   string
+	Title   string `gorm:"not null"`
 	Content string
-	OwnerId uint      // custom foreign key in relation with User
-	Comment []Comment `gorm:"foreignKey:OwnerId"`
+	UserId  uint      `gorm:"not null"` // foreign key in relation with User
+	Comment []Comment `gorm:"foreignKey:DocumentId"`
 }
 
 type Comment struct {
 	gorm.Model
-	Comment string
-	Author  string
-	OwnerId uint // custom foreign key that relates to its parent Document
+	Comment    string `gorm:"not null"`
+	Author     string `gorm:"not null"`
+	DocumentId uint   `gorm:"not null"` // foreign key in relation with Document
+	UserId     uint   `gorm:"not null"` //foreign key that relates to its User
 }
 
 type User struct {
 	gorm.Model
-	Name     string
-	Email    string
-	Password string
-	Doc      []Document `gorm:"foreignKey:OwnerId"`
+	Name     string     `gorm:"not null"`
+	Email    string     `gorm:"not null"`
+	Password string     `gorm:"not null"`
+	Doc      []Document `gorm:"foreignKey:UserId"`
+	Comment  []Comment  `gorm:"foreignKey:UserId"`
 }
 
 // Structuring Consistent Response Type

@@ -11,9 +11,10 @@ func CreateComment(comment CreateCommentReq, author model.User) (model.Comment, 
 	db := db.DBCon
 
 	newComment := model.Comment{
-		Author:  author.Name,
-		Comment: comment.Comment,
-		OwnerId: comment.ID,
+		Author:     author.Name,
+		Comment:    comment.Comment,
+		UserId:     author.ID,  // user commenting on document
+		DocumentId: comment.ID, // document commented on
 	}
 
 	result := db.Create(&newComment)

@@ -11,7 +11,7 @@ func CreateDocument(doc CreateDocumentReq, userId uint) (model.Document, error) 
 	db := db.DBCon
 
 	newDoc := model.Document{
-		OwnerId: userId,
+		UserId:  userId,
 		Title:   doc.Title,
 		Content: doc.Content,
 	}

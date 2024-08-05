@@ -28,10 +28,15 @@ func Shutdown() {
 
 func ListenForWS(conn *types.WebSocketConnection) {
 	// logs error when the function stops and recovers
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		log.Println("Recovered, error was:", r)
+	// 	}
+	// }()
+
 	defer func() {
-		if r := recover(); r != nil {
-			log.Println("Error:", r)
-		}
+		conn.Close()
+		fmt.Println("Connection closed.")
 	}()
 
 	log.Println("Listening for websocket connection. Current clients", clients)
@@ -43,8 +48,24 @@ func ListenForWS(conn *types.WebSocketConnection) {
 	for {
 		err := conn.ReadJSON(&payload)
 
+		// Handle errors
 		if err != nil {
-			log.Printf("Error occured when reading payload from websocket %s", err)
+			// handle unexpected client errors
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				fmt.Printf("Unexpected Close Error: %v\n", err)
+
+				// remove client from connection
+				delete(clients, *conn)
+			} else {
+				// json error
+				fmt.Printf("JSON Error: %v\n", err)
+
+				// remove client from connection
+				delete(clients, *conn)
+			}
+
+			break // only exits the loop, not entire function, allows for graceful exit
+
 		} else {
 
 			// handle new connection
@@ -115,6 +136,7 @@ func ListenForWSChannel() {
 
 				// get current editor client list in binary
 				encodedEditors, err := getEditorList()
+				fmt.Printf("encoded editor list %v\n", encodedEditors)
 
 				if err != nil {
 					encodedErrMsg, _ := commprotocol.EncodeMessage(commprotocol.SYSTEM_MSG, fmt.Sprintf("Error when retrieving list of users: %v", err))
@@ -130,10 +152,21 @@ func ListenForWSChannel() {
 
 				continue
 
-			default:
-				// responds events sent to the channel to all users
+			// when user disconnects
+			case "disconnected":
+				disconnectedUser := clients[event.Conn]
 
+				fmt.Printf("User %s disconnected\n", disconnectedUser)
+
+				// close the channel
+				event.Conn.Close()
+
+				// delete that user
+				delete(clients, event.Conn)
+
+			default:
 				// not matching anything, we send back generic response
+
 				continue
 			}
 
@@ -167,7 +200,6 @@ func getEditorList() ([]byte, error) {
 		return nil, err
 	}
 
-	fmt.Printf("encodedEditorUsernames %v", encodedEditorUsernames)
 	// return encoded
 	return encodedEditorUsernames, nil
 }

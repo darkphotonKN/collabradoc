@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"strings"
 )
 
 /**
@@ -17,7 +16,7 @@ import (
 * Incoming / Outgoing message composes of two "enums" and a value
 **/
 
-type Action int
+type Action uint
 
 const (
 	JOIN        Action = 0x12
@@ -71,11 +70,6 @@ func EncodeMessage[T any](action Action, value T) ([]byte, error) {
 		// so value will be a slice of current users
 		if users, ok := any(value).([]string); ok {
 
-			fmt.Println("joining:", users)
-			fmt.Println("users length:", len(users))
-			userString := strings.Join(users, ",")
-			fmt.Println("userString:", userString)
-
 			usersBytes := make([][]byte, len(users))
 
 			for i, user := range users {
@@ -87,7 +81,11 @@ func EncodeMessage[T any](action Action, value T) ([]byte, error) {
 
 			// [byte length]: write the length to the next spot after action
 			length := uint32(len(usersBytesJoined))
-			binary.Write(&buf, binary.BigEndian, length)
+			err := binary.Write(&buf, binary.BigEndian, length)
+
+			if err != nil {
+				return nil, err
+			}
 
 			// [users []byte separated by ","]: write the users in bytes with delimiter
 			buf.Write(usersBytesJoined)

@@ -7,6 +7,7 @@ import (
 
 	model "github.com/darkphotonKN/collabradoc/internal/shared"
 	"github.com/darkphotonKN/collabradoc/internal/utils/request"
+	"github.com/go-playground/validator/v10"
 )
 
 func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
@@ -21,11 +22,36 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// validation
+	validate := validator.New()
+	err = validate.Struct(payload)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
 	// create comment
 	newComment, err := CreateCommentService(payload, userId)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+
+		errResponse := model.Response[model.Comment]{
+			Status:  http.StatusBadRequest,
+			Message: err.Error(),
+			Data:    newComment,
+		}
+
+		errResponseJson, err := json.Marshal(errResponse)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(errResponseJson)
+		return
 	}
 
 	response := model.Response[model.Comment]{
@@ -39,8 +65,6 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 
 	w.Write(responseJson)
 

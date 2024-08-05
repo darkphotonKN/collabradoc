@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/darkphotonKN/collabradoc/internal/db"
-	model "github.com/darkphotonKN/collabradoc/internal/shared"
 	"github.com/darkphotonKN/collabradoc/internal/ws"
 	"github.com/joho/godotenv"
 )
@@ -77,13 +76,6 @@ func main() {
 	// Connecting to DB
 	db.Init(app.config.db.dsn)
 
-	// Perform Migrations
-	err = db.DBCon.AutoMigrate(&model.User{}, &model.Document{}, &model.Comment{})
-
-	if err != nil {
-		log.Fatal("DB could not be connected to.")
-	}
-
 	fmt.Println("DB connected!")
 
 	if err != nil {
@@ -101,13 +93,14 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
-	// blocking shutdown until message is sent to the quick channel
+	// blocking shutdown until message is sent to the quit channel
 	<-quit
 
 	log.Println("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
 	if err := app.shutdown(ctx); err != nil {
 		log.Printf("Server forced to shutdown: %s\n", err)
 	}

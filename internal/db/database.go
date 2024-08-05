@@ -3,6 +3,7 @@ package db
 import (
 	"log"
 
+	model "github.com/darkphotonKN/collabradoc/internal/shared"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -20,6 +21,13 @@ func Init(dsn string) {
 
 	if err != nil {
 		log.Fatalf("Could not connect to the database: %v", err)
+	}
+
+	// Perform Migrations
+	err = DBCon.AutoMigrate(&model.User{}, &model.Document{}, &model.Comment{})
+
+	if err != nil {
+		log.Fatal("DB could not be connected to.")
 	}
 
 }
