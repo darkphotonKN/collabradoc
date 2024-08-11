@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/darkphotonKN/collabradoc/internal/types"
 	"github.com/darkphotonKN/collabradoc/internal/utils/auth"
@@ -60,7 +61,8 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// authenticate jwt token
-	token, err := jwt.ParseWithClaims(tokenString, &auth.Claims{}, func(token *jwt.Token) (interface{}, error) {
+	claims := &auth.Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})
 
@@ -76,7 +78,6 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !token.Valid {
-		fmt.Printf("Token invalid, error: %s\n", err.Error())
 		http.Error(w, "Invalid token", http.StatusUnauthorized)
 		return
 	}
@@ -87,12 +88,25 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error creating websocket connection:", err)
 	}
 
-	log.Println("Connected to websocket server.")
+	log.Printf("User connected to websocket server: %d \n", claims.UserID)
+
+	// send client with join_user action to websocket channel to add user
+	// to current list of maintained editors
+	joinUserAction := WebSocketInfo{
+		WebSocketPayload: WebSocketPayload{
+			Action: "join_doc",
+			Value:  strconv.FormatUint(uint64(claims.UserID), 10),
+		},
+		Conn: types.WebSocketConnection{
+			Conn: ws,
+		},
+	}
+	wsChan <- joinUserAction
 
 	var response WebSocketResponse[string]
 
 	response.Action = "ServerMessage"
-	response.Value = "Game server connected."
+	response.Value = "Editor server connected."
 
 	err = ws.WriteJSON(response)
 

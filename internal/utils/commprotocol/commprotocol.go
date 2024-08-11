@@ -67,8 +67,9 @@ func EncodeMessage[T any](action Action, value T) ([]byte, error) {
 	// provides current users that can edit the document
 	// encoding structure: [action] - [byte length] - [users []byte separated by ","]
 	case EDITOR_LIST:
-		// so value will be a slice of current users
+		fmt.Printf("Generating editor list: %v\n", value)
 		if users, ok := any(value).([]string); ok {
+			// so value will be a slice of current users
 
 			usersBytes := make([][]byte, len(users))
 

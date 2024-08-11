@@ -1,6 +1,8 @@
 package user
 
 import (
+	"fmt"
+
 	"github.com/darkphotonKN/collabradoc/internal/db"
 	model "github.com/darkphotonKN/collabradoc/internal/shared"
 )
@@ -55,6 +57,8 @@ func FindUser(email string) (model.User, error) {
 // Queries for a single user based on ID
 func FindUserById(id uint) (model.User, error) {
 	db := db.DBCon
+
+	fmt.Println("attempt to find user with id:", id)
 
 	var user model.User
 	result := db.First(&user, "id = ?", id)

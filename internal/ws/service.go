@@ -3,9 +3,11 @@ package ws
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 
 	"github.com/darkphotonKN/collabradoc/internal/types"
+	"github.com/darkphotonKN/collabradoc/internal/user"
 	"github.com/darkphotonKN/collabradoc/internal/utils/commprotocol"
 	"github.com/gorilla/websocket"
 )
@@ -122,9 +124,25 @@ func ListenForWSChannel() {
 				continue
 
 			case "join_doc":
-				fmt.Printf("ADDING CLIENT with CONNECTION %v and NAME %s", event.Conn, event.Value)
+				fmt.Printf("ADDING CLIENT with CONNECTION %v and NAME %s\n", event.Conn, event.Value)
+
+				// get user from db
+
+				userId, err := strconv.ParseUint(event.Value, 10, 0)
+				if err != nil {
+					fmt.Printf("Error when attempting to parse uint from user id:\n", userId)
+				}
+
+				user, err := user.FindUserById(uint(userId))
+
+				if err != nil {
+					encodedErrMsg, _ := commprotocol.EncodeMessage(commprotocol.SYSTEM_MSG, fmt.Sprintf("Error when retrieving user with connected id: %v", err))
+					event.Conn.WriteMessage(websocket.BinaryMessage, encodedErrMsg)
+					continue // continue to next message read
+				}
+
 				// add them to the current pool of live doc editors
-				clients[event.Conn] = event.Value
+				clients[event.Conn] = user.Name
 
 				// encode message to binary
 				encodedMsg, err := commprotocol.EncodeMessage(commprotocol.JOIN, event.Value)
