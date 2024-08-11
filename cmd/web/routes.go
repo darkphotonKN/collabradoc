@@ -39,6 +39,7 @@ func (app *application) routes() http.Handler {
 	*************************/
 
 	// -- WebSocket Routes --
+	// mux.Handle("/ws", auth.JWTMiddlewareWS(ws.WsHandler))
 	mux.Get("/ws", ws.WsHandler)
 
 	// -- Docs Routes --

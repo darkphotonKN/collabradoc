@@ -1,10 +1,15 @@
 package ws
 
 import (
+	// "context"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/darkphotonKN/collabradoc/internal/types"
+	"github.com/darkphotonKN/collabradoc/internal/utils/auth"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/websocket"
 )
 
@@ -41,6 +46,41 @@ var upgradeConnection = websocket.Upgrader{
 
 // update strandard response writer, request and header to a websocket connection
 func WsHandler(w http.ResponseWriter, r *http.Request) {
+	envKey := os.Getenv("JWT_SECRET_KEY")
+	jwtKey := []byte(envKey)
+
+	// extract the token from the query parameters
+	tokenString := r.URL.Query().Get("token")
+
+	fmt.Println("tokenString", tokenString)
+
+	if tokenString == "" {
+		http.Error(w, "No token in connection.", http.StatusUnauthorized)
+		return
+	}
+
+	// authenticate jwt token
+	token, err := jwt.ParseWithClaims(tokenString, &auth.Claims{}, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	// jwt unauthorized
+	if err != nil {
+		fmt.Printf("Jwt unauthorized, error: %s\n", err.Error())
+		if err == jwt.ErrSignatureInvalid {
+			http.Error(w, "Invalid token signature", http.StatusUnauthorized)
+			return
+		}
+		http.Error(w, fmt.Sprintf("Error when parsing token: %s", err), http.StatusBadRequest)
+		return
+	}
+
+	if !token.Valid {
+		fmt.Printf("Token invalid, error: %s\n", err.Error())
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
+
 	ws, err := upgradeConnection.Upgrade(w, r, nil)
 
 	if err != nil {
