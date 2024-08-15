@@ -28,6 +28,7 @@ func Shutdown() {
 	}
 }
 
+// Handles each unique client via websocket with this function
 func ListenForWS(conn *types.WebSocketConnection) {
 	// logs error when the function stops and recovers
 	// defer func() {
@@ -48,9 +49,9 @@ func ListenForWS(conn *types.WebSocketConnection) {
 	// infinite loop to listen to incoming payloads
 
 	for {
+		// TODO: Update to decode via comm protocol
 		err := conn.ReadJSON(&payload)
 
-		// Handle errors
 		if err != nil {
 			// handle unexpected client errors
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
@@ -59,7 +60,6 @@ func ListenForWS(conn *types.WebSocketConnection) {
 				// remove client from connection
 				delete(clients, *conn)
 			} else {
-				// json error
 				fmt.Printf("JSON Error: %v\n", err)
 
 				// remove client from connection
@@ -126,8 +126,7 @@ func ListenForWSChannel() {
 			case "join_doc":
 				fmt.Printf("ADDING CLIENT with CONNECTION %v and NAME %s\n", event.Conn, event.Value)
 
-				// get user from db
-
+				// get user from db to store in current connection map
 				userId, err := strconv.ParseUint(event.Value, 10, 0)
 				if err != nil {
 					fmt.Printf("Error when attempting to parse uint from user id:\n", userId)
@@ -145,7 +144,7 @@ func ListenForWSChannel() {
 				clients[event.Conn] = user.Name
 
 				// encode message to binary
-				encodedMsg, err := commprotocol.EncodeMessage(commprotocol.JOIN, event.Value)
+				encodedMsg, err := commprotocol.EncodeMessage(commprotocol.JOIN, user.Name)
 				log.Println("encodedMessage:", encodedMsg)
 
 				if err != nil {

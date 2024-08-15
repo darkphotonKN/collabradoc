@@ -10,3 +10,8 @@ func CreateDocumentService(doc CreateDocumentReq, userId uint) (model.Document, 
 func GetDocuments(userId uint) ([]model.Document, error) {
 	return QueryDocuments(userId)
 }
+
+func GetDocumentById(id uint, userId uint) (model.Document, error) {
+
+	return QueryDocumentById(id, userId)
+}

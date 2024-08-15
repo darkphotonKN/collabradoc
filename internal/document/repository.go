@@ -35,8 +35,23 @@ func QueryDocuments(userId uint) ([]model.Document, error) {
 
 	if result.Error != nil {
 		fmt.Println("result.Error:", result.Error)
-		return documents, result.Error
+		return documents, fmt.Errorf("No existing documents for this user.")
 	}
 
 	return documents, nil
+}
+
+func QueryDocumentById(id uint, userId uint) (model.Document, error) {
+	db := db.DBCon
+
+	var document model.Document
+
+	result := db.Where("user_id = ? AND id = ?", userId, id).First(&document)
+
+	if result.Error != nil {
+		fmt.Println("result.Error:", result.Error)
+		return model.Document{}, fmt.Errorf("Document does not belong to user you are attempting to create a live session with.")
+	}
+
+	return document, nil
 }

@@ -24,7 +24,7 @@ func Init(dsn string) {
 	}
 
 	// Perform Migrations
-	err = DBCon.AutoMigrate(&model.User{}, &model.Document{}, &model.Comment{})
+	err = DBCon.AutoMigrate(&model.User{}, &model.Document{}, &model.Comment{}, &model.LiveSession{})
 
 	if err != nil {
 		log.Fatal("DB could not be connected to.")

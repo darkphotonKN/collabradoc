@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -102,60 +101,4 @@ func JWTMiddleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
-}
-
-// middleware that protects with jwt tokens for WebSocket Connections
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
-func JWTMiddlewareWS(next http.HandlerFunc) http.HandlerFunc {
-	var envKey = os.Getenv("JWT_SECRET_KEY")
-	var jwtKey = []byte(envKey)
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Extract the token from the query parameters
-		tokenString := r.URL.Query().Get("token")
-		if tokenString == "" {
-			http.Error(w, "Token query parameter missing", http.StatusUnauthorized)
-			return
-		}
-
-		claims := &Claims{}
-
-		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-			return jwtKey, nil
-		})
-
-		if err != nil {
-			if err == jwt.ErrSignatureInvalid {
-				http.Error(w, "Invalid token signature", http.StatusUnauthorized)
-				return
-			}
-			http.Error(w, fmt.Sprintf("Error when parsing token: %s", err), http.StatusBadRequest)
-			return
-		}
-
-		if !token.Valid {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
-			return
-		}
-
-		// Add the user ID to the request context
-		ctx := context.WithValue(r.Context(), "user_id", claims.UserID)
-		r = r.WithContext(ctx)
-
-		// Proceed with WebSocket upgrade
-		conn, err := upgrader.Upgrade(w, r, nil)
-		if err != nil {
-			http.Error(w, "Could not upgrade to WebSocket", http.StatusInternalServerError)
-			return
-		}
-
-		// Pass the WebSocket connection to the next handler
-		defer conn.Close()
-		next.ServeHTTP(w, r.WithContext(ctx))
-	}
 }

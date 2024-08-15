@@ -6,6 +6,7 @@ import (
 
 	"github.com/darkphotonKN/collabradoc/internal/comment"
 	"github.com/darkphotonKN/collabradoc/internal/document"
+	livesession "github.com/darkphotonKN/collabradoc/internal/live_session"
 	"github.com/darkphotonKN/collabradoc/internal/user"
 	"github.com/darkphotonKN/collabradoc/internal/utils/auth"
 	"github.com/darkphotonKN/collabradoc/internal/ws"
@@ -39,12 +40,15 @@ func (app *application) routes() http.Handler {
 	*************************/
 
 	// -- WebSocket Routes --
-	// mux.Handle("/ws", auth.JWTMiddlewareWS(ws.WsHandler))
 	mux.Get("/ws", ws.WsHandler)
 
 	// -- Docs Routes --
 	mux.With(auth.JWTMiddleware).Get("/api/doc", document.GetDocumentsHandler)
 	mux.With(auth.JWTMiddleware).Post("/api/doc", document.CreateDocHandler)
+
+	// -- Live Session Routes --
+
+	mux.With(auth.JWTMiddleware).Post("/api/livesession", livesession.CreateLiveSessionHandler)
 
 	// -- Comment Routes --
 	mux.With(auth.JWTMiddleware).Post("/api/comment", comment.CreateCommentHandler)

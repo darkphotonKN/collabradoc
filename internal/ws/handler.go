@@ -88,6 +88,8 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error creating websocket connection:", err)
 	}
 
+	// -- Client Connected and Authenticated Here --
+
 	log.Printf("User connected to websocket server: %d \n", claims.UserID)
 
 	// send client with join_user action to websocket channel to add user
@@ -103,22 +105,10 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	wsChan <- joinUserAction
 
-	var response WebSocketResponse[string]
-
-	response.Action = "ServerMessage"
-	response.Value = "Editor server connected."
-
-	err = ws.WriteJSON(response)
-
-	// client connected
-
 	// create new connection type and add them to list of connections
 	clientConnection := types.WebSocketConnection{
 		Conn: ws,
 	}
-
-	// initialize connection for client but don't allocate username until acquired
-	// clients[clientConnection] = ""
 
 	// start goroutine thread to listen to all future incoming payloads
 	go ListenForWS(&clientConnection)
