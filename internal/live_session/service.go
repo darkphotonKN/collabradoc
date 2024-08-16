@@ -40,6 +40,7 @@ func GenerateSessionID() string {
 
 func GetLiveSessionService(userId uint, documentId uint) (LiveSessionLink, error) {
 
+	// validates live session belongs to the user, and retreives it
 	liveSession, err := QueryLiveSession(userId, documentId)
 
 	if err != nil {
@@ -50,5 +51,22 @@ func GetLiveSessionService(userId uint, documentId uint) (LiveSessionLink, error
 
 	// construct link with liveSession's sessionId which only allows authenticated users
 	// who own both the doc and the session to access
-	return LiveSessionLink(fmt.Sprintf("%s/%s", domain, liveSession.SessionID)), nil
+	return LiveSessionLink(fmt.Sprintf("%s/sessionId=%s", domain, liveSession.SessionID)), nil
+}
+
+func AuthorizeLiveSessionService(userId uint, sessionId string) (bool, error) {
+	// get relation of user with the sessionId
+	_, err := user.FindUserById(userId)
+
+	if err != nil {
+		return false, fmt.Errorf("Userdoes not exist.")
+	}
+
+	err = QueryLiveSessionForUser(userId, sessionId)
+
+	if err != nil {
+		return false, fmt.Errorf("This user is not authorized to access this session.")
+	}
+
+	return true, nil
 }

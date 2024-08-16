@@ -47,8 +47,8 @@ func (app *application) routes() http.Handler {
 	mux.With(auth.JWTMiddleware).Post("/api/doc", document.CreateDocHandler)
 
 	// -- Live Session Routes --
-
 	mux.With(auth.JWTMiddleware).Post("/api/livesession", livesession.CreateLiveSessionHandler)
+	mux.With(auth.JWTMiddleware).Get("/api/livesession", livesession.GetLiveSessionLinkHandler)
 
 	// -- Comment Routes --
 	mux.With(auth.JWTMiddleware).Post("/api/comment", comment.CreateCommentHandler)

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	model "github.com/darkphotonKN/collabradoc/internal/shared"
 	"github.com/darkphotonKN/collabradoc/internal/utils/request"
@@ -54,6 +55,39 @@ func CreateLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(out)
 }
 
-func GetLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
+func GetLiveSessionLinkHandler(w http.ResponseWriter, r *http.Request) {
+	userId, _ := request.ExtractUserID(r.Context())
+
+	documentIdQuery := r.URL.Query().Get("documentId")
+
+	// convert to uint to conform to the actual documentId column
+	documentIdUint64, err := strconv.ParseUint(documentIdQuery, 10, 32)
+	documentId := uint(documentIdUint64)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	liveSessionLink, err := GetLiveSessionService(userId, documentId)
+
+	liveSessionLinkRes := model.Response[LiveSessionLink]{
+		Status:  http.StatusOK,
+		Message: "Generated new live session.",
+		Data:    liveSessionLink,
+	}
+
+	out, err := json.Marshal(liveSessionLinkRes)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
+}
+
+func AuthorizeLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
+	userId, _ := request.ExtractUserID(r.Context())
+
+	sessionId := r.URL.Query().Get("sessionId")
+
+	sessionAuthorized, err := AuthorizeLiveSessionService(userId, sessionId)
 
 }
