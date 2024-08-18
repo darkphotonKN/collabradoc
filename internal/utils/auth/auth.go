@@ -61,7 +61,7 @@ func GenerateJWT(userId uint) (string, error) {
 	return tokenString, nil
 }
 
-// middleware that protects with jwt tokens
+// middleware that authorizes with jwt tokens
 func JWTMiddleware(next http.Handler) http.Handler {
 	var envKey = os.Getenv("JWT_SECRET_KEY")
 	var jwtKey = []byte(envKey)

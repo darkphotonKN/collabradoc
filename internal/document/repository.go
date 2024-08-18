@@ -31,7 +31,7 @@ func QueryDocuments(userId uint) ([]model.Document, error) {
 
 	var documents []model.Document
 
-	result := db.Where("user_id = ?", userId).Find(&documents)
+	result := db.Preload("LiveSession").Where("user_id = ?", userId).Find(&documents)
 
 	if result.Error != nil {
 		fmt.Println("result.Error:", result.Error)

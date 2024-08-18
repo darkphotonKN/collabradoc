@@ -84,10 +84,10 @@ func GetLiveSessionLinkHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func AuthorizeLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
-	userId, _ := request.ExtractUserID(r.Context())
-
-	sessionId := r.URL.Query().Get("sessionId")
-
-	sessionAuthorized, err := AuthorizeLiveSessionService(userId, sessionId)
+	// userId, _ := request.ExtractUserID(r.Context())
+	//
+	// sessionId := r.URL.Query().Get("sessionId")
+	//
+	// sessionAuthorized, err := AuthorizeLiveSessionService(userId, sessionId)
 
 }

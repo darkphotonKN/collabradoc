@@ -4,11 +4,11 @@ import "gorm.io/gorm"
 
 type Document struct {
 	gorm.Model
-	Title       string `gorm:"not null"`
-	Content     string
-	UserId      uint      `gorm:"not null"` // foreign key in relation with User
-	Comment     []Comment `gorm:"foreignKey:DocumentId"`
-	LiveSession LiveSession
+	Title       string      `gorm:"not null" json:"title"`
+	Content     string      `json:"content"`
+	UserId      uint        `gorm:"not null" json:"userId"` // foreign key in relation with User
+	Comment     []Comment   `gorm:"foreignKey:DocumentId" json:"comment"`
+	LiveSession LiveSession `json:"liveSession"`
 }
 
 type LiveSession struct {

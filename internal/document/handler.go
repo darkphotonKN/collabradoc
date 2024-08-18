@@ -16,15 +16,31 @@ func GetDocumentsHandler(w http.ResponseWriter, r *http.Request) {
 
 	documents, err := GetDocuments(userId)
 
+	var resDocuments []DocumentRes
+
+	// map DB documents to response-friendly documents
+	for _, doc := range documents {
+		resDocuments = append(resDocuments, DocumentRes{
+			ID:          doc.ID,
+			CreatedAt:   doc.CreatedAt,
+			UpdatedAt:   doc.UpdatedAt,
+			Title:       doc.Title,
+			Content:     doc.Content,
+			UserId:      doc.UserId,
+			LiveSession: doc.LiveSession,
+			Comment:     doc.Comment,
+		})
+	}
+
 	if err != nil {
 		fmt.Println("Error when retrieving document list.")
 		return
 	}
 
-	documentsRes := model.Response[[]model.Document]{
+	documentsRes := model.Response[[]DocumentRes]{
 		Status:  http.StatusOK,
 		Message: "Succesfully retrieved all documents.",
-		Data:    documents,
+		Data:    resDocuments,
 	}
 
 	out, err := json.Marshal(documentsRes)
