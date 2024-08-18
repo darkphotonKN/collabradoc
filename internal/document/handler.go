@@ -18,17 +18,19 @@ func GetDocumentsHandler(w http.ResponseWriter, r *http.Request) {
 
 	var resDocuments []DocumentRes
 
-	// map DB documents to response-friendly documents
+	// map documents to response-friendly documents
 	for _, doc := range documents {
 		resDocuments = append(resDocuments, DocumentRes{
-			ID:          doc.ID,
-			CreatedAt:   doc.CreatedAt,
-			UpdatedAt:   doc.UpdatedAt,
-			Title:       doc.Title,
-			Content:     doc.Content,
-			UserId:      doc.UserId,
-			LiveSession: doc.LiveSession,
-			Comment:     doc.Comment,
+			ID:        doc.ID,
+			CreatedAt: doc.CreatedAt,
+			UpdatedAt: doc.UpdatedAt,
+			Title:     doc.Title,
+			Content:   doc.Content,
+			UserId:    doc.UserId,
+			LiveSessionInfo: LiveSessionInfo{
+				SessionID: doc.LiveSession.SessionID,
+			},
+			Comment: doc.Comment,
 		})
 	}
 

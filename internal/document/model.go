@@ -11,13 +11,17 @@ type CreateDocumentReq struct {
 	Content string `json:"content" validate:"required"`
 }
 
+type LiveSessionInfo struct {
+	SessionID string `json:"sessionId"`
+}
+
 type DocumentRes struct {
-	ID          uint              `json:"id"`
-	CreatedAt   time.Time         `json:"createdAt"`
-	UpdatedAt   time.Time         `json:"updatedAt"`
-	Title       string            `json:"title"`
-	Content     string            `json:"content"`
-	UserId      uint              `json:"userId"`
-	LiveSession model.LiveSession `json:"liveSession"`
-	Comment     []model.Comment   `json:"comment"`
+	ID              uint            `json:"id"`
+	CreatedAt       time.Time       `json:"createdAt"`
+	UpdatedAt       time.Time       `json:"updatedAt"`
+	Title           string          `json:"title"`
+	Content         string          `json:"content"`
+	UserId          uint            `json:"userId"`
+	LiveSessionInfo LiveSessionInfo `json:"liveSession"`
+	Comment         []model.Comment `json:"comment,omitempty"`
 }

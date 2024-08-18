@@ -84,10 +84,44 @@ func GetLiveSessionLinkHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func AuthorizeLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
-	// userId, _ := request.ExtractUserID(r.Context())
-	//
-	// sessionId := r.URL.Query().Get("sessionId")
-	//
-	// sessionAuthorized, err := AuthorizeLiveSessionService(userId, sessionId)
+	userId, _ := request.ExtractUserID(r.Context())
+
+	sessionId := r.URL.Query().Get("sessionId")
+
+	sessionAuthorized, err := AuthorizeLiveSessionService(userId, sessionId)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if sessionAuthorized {
+		successRes := model.Response[string]{
+			Status:  http.StatusOK,
+			Message: "Live session was authorized.",
+		}
+
+		out, err := json.Marshal(successRes)
+
+		if err != nil {
+			fmt.Printf("Error when encoding authorize live session handler response: %s\n", err)
+		}
+		w.Write(out)
+	} else {
+
+		rejectRes := model.Response[string]{
+			Status:  http.StatusUnauthorized,
+			Message: "Live session is not authorized for this user / session.",
+		}
+
+		out, err := json.Marshal(rejectRes)
+
+		if err != nil {
+			fmt.Printf("Error when encoding authorize live session handler response: %s\n", err)
+		}
+		w.Write(out)
+
+	}
 
 }
