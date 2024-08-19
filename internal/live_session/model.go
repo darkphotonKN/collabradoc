@@ -1,7 +1,9 @@
 package livesession
 
+import "encoding/json"
+
 type CreateLiveSessionReq struct {
-	DocumentID uint `json:"documentId"`
+	DocumentID json.Number `json:"documentId"`
 }
 
 type LiveSessionLink string

@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func CreateLiveSessionService(userId uint, req CreateLiveSessionReq) (model.LiveSession, error) {
+func CreateLiveSessionService(userId uint, documentId uint) (model.LiveSession, error) {
 
 	// validate user exists
 	user, err := user.FindUserById(userId)
@@ -21,7 +21,7 @@ func CreateLiveSessionService(userId uint, req CreateLiveSessionReq) (model.Live
 	}
 
 	// validate document exists and belongs to specific user
-	doc, err := document.GetDocumentById(req.DocumentID, userId)
+	doc, err := document.GetDocumentById(documentId, userId)
 	fmt.Println("err finding doc", err)
 
 	if err != nil {
@@ -47,11 +47,8 @@ func GetLiveSessionService(userId uint, documentId uint) (LiveSessionLink, error
 		return "", customerrors.LiveSessionUnauthorized
 	}
 
-	domain := os.Getenv("SITE_DOMAIN")
+	return GenerateLiveSessionURL(liveSession.SessionID, documentId), nil
 
-	// construct link with liveSession's sessionId which only allows authenticated users
-	// who own both the doc and the session to access
-	return LiveSessionLink(fmt.Sprintf("%s/sessionId=%s", domain, liveSession.SessionID)), nil
 }
 
 func AuthorizeLiveSessionService(userId uint, sessionId string) (bool, error) {
@@ -69,4 +66,14 @@ func AuthorizeLiveSessionService(userId uint, sessionId string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// -- Constructs Live Session URL --
+func GenerateLiveSessionURL(sessionId string, documentId uint) LiveSessionLink {
+
+	domain := os.Getenv("SITE_DOMAIN")
+
+	// construct link with liveSession's sessionId which only allows authenticated users
+	// who own both the doc and the session to access
+	return LiveSessionLink(fmt.Sprintf("%s/docs-live?sessionId=%s&documentId=%d", domain, sessionId, documentId))
 }

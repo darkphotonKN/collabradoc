@@ -32,17 +32,26 @@ func CreateLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create live session for the specific document and user
-	newLiveSession, err := CreateLiveSessionService(userId, req)
+	docIdInt64, err := req.DocumentID.Int64()
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	newLiveSessionRes := model.Response[model.LiveSession]{
+	newLiveSession, err := CreateLiveSessionService(userId, uint(docIdInt64))
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	liveSessionLink := GenerateLiveSessionURL(newLiveSession.SessionID, newLiveSession.DocumentID)
+
+	newLiveSessionRes := model.Response[LiveSessionLink]{
 		Status:  http.StatusCreated,
 		Message: fmt.Sprintf("Successfully created new live session %s for user %d", newLiveSession.SessionID, userId),
-		Data:    newLiveSession,
+		Data:    liveSessionLink,
 	}
 
 	out, err := json.Marshal(newLiveSessionRes)
@@ -55,7 +64,7 @@ func CreateLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(out)
 }
 
-func GetLiveSessionLinkHandler(w http.ResponseWriter, r *http.Request) {
+func GetLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 	userId, _ := request.ExtractUserID(r.Context())
 
 	documentIdQuery := r.URL.Query().Get("documentId")
@@ -96,6 +105,7 @@ func AuthorizeLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
+	// check final session authorized boolean to dictate response package
 	if sessionAuthorized {
 		successRes := model.Response[string]{
 			Status:  http.StatusOK,
