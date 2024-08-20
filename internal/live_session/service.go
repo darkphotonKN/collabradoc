@@ -12,7 +12,6 @@ import (
 )
 
 func CreateLiveSessionService(userId uint, documentId uint) (model.LiveSession, error) {
-
 	// validate user exists
 	user, err := user.FindUserById(userId)
 
@@ -31,7 +30,6 @@ func CreateLiveSessionService(userId uint, documentId uint) (model.LiveSession, 
 	sessionId := GenerateSessionID()
 
 	return CreateLiveSession(user, sessionId, doc)
-
 }
 
 func GenerateSessionID() string {
@@ -39,7 +37,6 @@ func GenerateSessionID() string {
 }
 
 func GetLiveSessionService(userId uint, documentId uint) (LiveSessionLink, error) {
-
 	// validates live session belongs to the user, and retreives it
 	liveSession, err := QueryLiveSession(userId, documentId)
 
@@ -48,7 +45,6 @@ func GetLiveSessionService(userId uint, documentId uint) (LiveSessionLink, error
 	}
 
 	return GenerateLiveSessionURL(liveSession.SessionID, documentId), nil
-
 }
 
 func AuthorizeLiveSessionService(userId uint, sessionId string) (bool, error) {
@@ -56,7 +52,7 @@ func AuthorizeLiveSessionService(userId uint, sessionId string) (bool, error) {
 	_, err := user.FindUserById(userId)
 
 	if err != nil {
-		return false, fmt.Errorf("Userdoes not exist.")
+		return false, fmt.Errorf("User does not exist.")
 	}
 
 	err = QueryLiveSessionForUser(userId, sessionId)

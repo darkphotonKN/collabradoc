@@ -97,6 +97,8 @@ func AuthorizeLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	sessionId := r.URL.Query().Get("sessionId")
 
+	fmt.Printf("sessionId: %s", sessionId)
+
 	sessionAuthorized, err := AuthorizeLiveSessionService(userId, sessionId)
 
 	if err != nil {
@@ -107,9 +109,10 @@ func AuthorizeLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	// check final session authorized boolean to dictate response package
 	if sessionAuthorized {
-		successRes := model.Response[string]{
+		successRes := model.Response[bool]{
 			Status:  http.StatusOK,
 			Message: "Live session was authorized.",
+			Data:    true,
 		}
 
 		out, err := json.Marshal(successRes)
@@ -120,9 +123,10 @@ func AuthorizeLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write(out)
 	} else {
 
-		rejectRes := model.Response[string]{
+		rejectRes := model.Response[bool]{
 			Status:  http.StatusUnauthorized,
 			Message: "Live session is not authorized for this user / session.",
+			Data:    false,
 		}
 
 		out, err := json.Marshal(rejectRes)

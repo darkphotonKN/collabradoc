@@ -40,10 +40,12 @@ func QueryLiveSession(userId uint, documentId uint) (model.LiveSession, error) {
 }
 
 func QueryLiveSessionForUser(userId uint, sessionId string) error {
-
 	db := db.DBCon
+	db.Debug()
 
 	var liveSession model.LiveSession
+
+	fmt.Printf("sessionId: %s\n", sessionId)
 
 	result := db.Joins("JOIN live_session_users ON live_session_users.live_session_id = live_sessions.id").Where("live_sessions.session_id = ? AND live_session_users.user_id = ?", sessionId, userId).First(&liveSession)
 
