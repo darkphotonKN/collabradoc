@@ -19,13 +19,13 @@ var (
 
 func Shutdown() {
 	close(shutdown)
-	// Close all client connections
-	mu.Lock()
-	defer mu.Unlock()
-	for conn := range clients {
-		conn.Conn.Close()
-		delete(clients, conn)
-	}
+	// TODO: Close all client connections
+	// mu.Lock()
+	// defer mu.Unlock()
+	// for conn := range clients {
+	// 	conn.Conn.Close()
+	// 	delete(clients, conn)
+	// }
 }
 
 /**
@@ -34,14 +34,14 @@ func Shutdown() {
 * This function is ran concurrently for each unique client that connects
 * to a live session (to edit documents).
 **/
-func ListenForWS(conn *types.WebSocketConnection) {
+func ListenForWS(conn *types.WebSocketConnection, sessionId string) {
 
 	defer func() {
 		conn.Close()
 		fmt.Println("Connection closed.")
 	}()
 
-	log.Println("Listening for websocket connection. Current clients", clients)
+	log.Println("Listening for websocket connection. All session clients", clientConnections)
 
 	var payload WebSocketPayload
 
@@ -55,12 +55,12 @@ func ListenForWS(conn *types.WebSocketConnection) {
 				fmt.Printf("Unexpected Close Error: %v\n", err)
 
 				// remove client from connection
-				delete(clients, *conn)
+				delete(clientConnections[sessionId], *conn)
 			} else {
 				fmt.Printf("JSON Error: %v\n", err)
 
 				// remove client from connection
-				delete(clients, *conn)
+				delete(clientConnections[sessionId], *conn)
 			}
 
 			break // only exits the loop, not entire function, allows for graceful exit
@@ -75,7 +75,8 @@ func ListenForWS(conn *types.WebSocketConnection) {
 					Action: payload.Action,
 					Value:  payload.Value,
 				},
-				Conn: *conn,
+				SessionId: sessionId,
+				Conn:      *conn,
 			}
 
 			log.Printf("payload: %+v", payload)
@@ -113,7 +114,7 @@ func ListenForWSChannel() {
 			case "editor_list":
 
 				// get list of client for user
-				list, err := getEditorList()
+				list, err := getEditorList(event.SessionId)
 
 				if err != nil {
 					encodedErrMsg, _ := commprotocol.EncodeMessage(commprotocol.SYSTEM_MSG, fmt.Sprintf("Error when retrieving list of users: %v", err))
@@ -121,7 +122,7 @@ func ListenForWSChannel() {
 					event.Conn.WriteMessage(websocket.BinaryMessage, encodedErrMsg)
 				}
 
-				broadcastToAllClients(list)
+				broadcastToAllClients(list, event.SessionId)
 
 				// skip rest of function and continue listening for further websocket messages
 				continue
@@ -143,9 +144,6 @@ func ListenForWSChannel() {
 					continue // continue to next message read
 				}
 
-				// add them to the current pool of live doc editors
-				clients[event.Conn] = user.Name
-
 				// add them to their respective live sessions under their own connections
 				temp := make(map[types.WebSocketConnection]string)
 				temp[event.Conn] = user.Name
@@ -160,7 +158,7 @@ func ListenForWSChannel() {
 				}
 
 				// get current editor client list in binary
-				encodedEditors, err := getEditorList()
+				encodedEditors, err := getEditorList(event.SessionId)
 				fmt.Printf("encoded editor list %v\n", encodedEditors)
 
 				if err != nil {
@@ -170,24 +168,24 @@ func ListenForWSChannel() {
 				}
 
 				// send binary message to all users saying who has joined
-				broadcastToAllClients(encodedMsg)
+				broadcastToAllClients(encodedMsg, event.SessionId)
 
 				// send list of current editors back to all clients
-				broadcastToAllClients(encodedEditors)
+				broadcastToAllClients(encodedEditors, event.SessionId)
 
 				continue
 
 			// when user disconnects
 			case "disconnected":
-				disconnectedUser := clients[event.Conn]
+				disconnectedUser := clientConnections[event.SessionId][event.Conn]
 
 				fmt.Printf("User %s disconnected\n", disconnectedUser)
 
 				// close the channel
 				event.Conn.Close()
 
-				// delete that user
-				delete(clients, event.Conn)
+				// new delete that user
+				delete(clientConnections[event.SessionId], event.Conn)
 
 			default:
 				// not matching anything, we send back generic response
@@ -202,36 +200,35 @@ func ListenForWSChannel() {
 }
 
 // get the clients list and package it to fit action and message
-func getEditorList() ([]byte, error) {
-	fmt.Printf("new sessionId connection map: %+v\n", clientConnections)
-	editorUsernames := make([]string, 0, len(clients)) // pre-allocate the size but initialize at 0
+func getEditorList(sessionId string) ([]byte, error) {
 
-	fmt.Printf("editorUsernames length: %d\n", len(editorUsernames))
-	fmt.Printf("clients before decoding: %v\n", clients)
+	// retreive corresponding session map for users
+	sessionUsers := clientConnections[sessionId]
+	sessionUsernames := make([]string, len(sessionUsers))
 
-	// convert clients map to a slice of strings (usernames)
-	for _, username := range clients { // forgo key which is the WS connection
-		fmt.Printf("debug username in client list was %s \n", username)
-		editorUsernames = append(editorUsernames, username)
+	// convert clientConnections' current session connections (sessionUsers) to a slice of strings (names)
+	for _, name := range sessionUsers {
+		sessionUsernames = append(sessionUsernames, name)
 	}
 
-	fmt.Printf("editorUsernames after: %v\n", editorUsernames)
-	fmt.Printf("editorUsernames length after: %v\n", len(editorUsernames))
+	fmt.Printf("NEW sessionUsernames %v\n", sessionUsernames)
+	fmt.Printf("NEW sessionUsernames length %d\n", len(sessionUsernames))
 
 	// encode slice of usernames
-	encodedEditorUsernames, err := commprotocol.EncodeMessage(commprotocol.EDITOR_LIST, editorUsernames)
+	encodedSessionUsernames, err := commprotocol.EncodeMessage(commprotocol.EDITOR_LIST, sessionUsernames)
 
 	if err != nil {
-		fmt.Printf("Error when attempting to encode %v, error was %v", editorUsernames, err)
+		fmt.Printf("Error when attempting to encode %v, error was %v", sessionUsernames, err)
 		return nil, err
 	}
 
 	// return encoded
-	return encodedEditorUsernames, nil
+	return encodedSessionUsernames, nil
 }
 
-func broadcastToAllClients(encodedMsg []byte) {
-	for wsConn := range clients {
+func broadcastToAllClients(encodedMsg []byte, sessionId string) {
+	sessionClients := clientConnections[sessionId]
+	for wsConn := range sessionClients {
 		err := wsConn.Conn.WriteMessage(websocket.BinaryMessage, encodedMsg)
 
 		if err != nil {
@@ -239,7 +236,7 @@ func broadcastToAllClients(encodedMsg []byte) {
 			wsConn.Conn.Close()
 
 			// delete from client list
-			delete(clients, wsConn)
+			delete(clientConnections[sessionId], wsConn)
 		}
 	}
 }

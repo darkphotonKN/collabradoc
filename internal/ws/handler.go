@@ -18,7 +18,6 @@ import (
 var wsChan = make(chan WebSocketInfo)
 
 // tracks all connected clients
-var clients = make(map[types.WebSocketConnection]string)
 
 // TODO: Testing, refactor old client connections with this one after
 // map of sessionIds that map to maps of websocket connections to client names
@@ -90,6 +89,8 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// -- TODO:Authorizing User is part of the Same Session --
+
 	ws, err := upgradeConnection.Upgrade(w, r, nil)
 
 	if err != nil {
@@ -121,7 +122,7 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// start goroutine thread to listen to all future incoming payloads
-	go ListenForWS(&clientConnection)
+	go ListenForWS(&clientConnection, sessionId)
 
 	if err != nil {
 		log.Println("Error when writing back to client:", err)
