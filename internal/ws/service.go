@@ -28,14 +28,13 @@ func Shutdown() {
 	}
 }
 
-// Handles each unique client via websocket with this function
+/**
+* Handles each unique client via websocket
+*
+* This function is ran concurrently for each unique client that connects
+* to a live session (to edit documents).
+**/
 func ListenForWS(conn *types.WebSocketConnection) {
-	// logs error when the function stops and recovers
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		log.Println("Recovered, error was:", r)
-	// 	}
-	// }()
 
 	defer func() {
 		conn.Close()
@@ -45,8 +44,6 @@ func ListenForWS(conn *types.WebSocketConnection) {
 	log.Println("Listening for websocket connection. Current clients", clients)
 
 	var payload WebSocketPayload
-
-	// infinite loop to listen to incoming payloads
 
 	for {
 		// TODO: Update to decode via comm protocol
@@ -89,7 +86,13 @@ func ListenForWS(conn *types.WebSocketConnection) {
 	}
 }
 
-// Listen to the WebSocket CHANNEL
+/**
+* Listens to the WebSocket CHANNEL
+*
+* This function is running concurrently at the start of the application.
+* Will handle all messages sent to the central channel and handle the
+* messages accordingly.
+**/
 func ListenForWSChannel() {
 	log.Println("Started listening concurrently for websocket connections on a goroutine")
 
@@ -124,7 +127,7 @@ func ListenForWSChannel() {
 				continue
 
 			case "join_doc":
-				fmt.Printf("ADDING CLIENT with CONNECTION %v and NAME %s\n", event.Conn, event.Value)
+				fmt.Printf("ADDING CLIENT with CONNECTION %v and NAME %s and for SESSIONID %s\n", event.Conn, event.Value, event.SessionId)
 
 				// get user from db to store in current connection map
 				userId, err := strconv.ParseUint(event.Value, 10, 0)
@@ -142,6 +145,11 @@ func ListenForWSChannel() {
 
 				// add them to the current pool of live doc editors
 				clients[event.Conn] = user.Name
+
+				// add them to their respective live sessions under their own connections
+				temp := make(map[types.WebSocketConnection]string)
+				temp[event.Conn] = user.Name
+				clientConnections[event.SessionId] = temp
 
 				// encode message to binary
 				encodedMsg, err := commprotocol.EncodeMessage(commprotocol.JOIN, user.Name)
@@ -195,6 +203,7 @@ func ListenForWSChannel() {
 
 // get the clients list and package it to fit action and message
 func getEditorList() ([]byte, error) {
+	fmt.Printf("new sessionId connection map: %+v\n", clientConnections)
 	editorUsernames := make([]string, 0, len(clients)) // pre-allocate the size but initialize at 0
 
 	fmt.Printf("editorUsernames length: %d\n", len(editorUsernames))

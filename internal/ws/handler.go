@@ -17,8 +17,12 @@ import (
 // channel to track websocket payloads
 var wsChan = make(chan WebSocketInfo)
 
-// track connected clients
+// tracks all connected clients
 var clients = make(map[types.WebSocketConnection]string)
+
+// TODO: Testing, refactor old client connections with this one after
+// map of sessionIds that map to maps of websocket connections to client names
+var clientConnections = make(map[string]map[types.WebSocketConnection]string)
 
 // response of payload sent back to clients via websocket
 type WebSocketResponse[T any] struct {
@@ -35,7 +39,8 @@ type WebSocketPayload struct {
 // For internal websocket tracking
 type WebSocketInfo struct {
 	WebSocketPayload
-	Conn types.WebSocketConnection
+	SessionId string
+	Conn      types.WebSocketConnection
 }
 
 // for upgrading response writer / request connections
@@ -50,17 +55,20 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 	envKey := os.Getenv("JWT_SECRET_KEY")
 	jwtKey := []byte(envKey)
 
-	// extract the token from the query parameters
+	// extract the token from the query param
 	tokenString := r.URL.Query().Get("token")
+	fmt.Printf("tokenString: %s\n", tokenString)
 
-	fmt.Println("tokenString", tokenString)
+	// get sessionId from the query params
+	sessionId := r.URL.Query().Get("sessionId")
+	fmt.Printf("sessionId: %s\n", sessionId)
 
 	if tokenString == "" {
 		http.Error(w, "No token in connection.", http.StatusUnauthorized)
 		return
 	}
 
-	// authenticate jwt token
+	// -- Client Being Authenticated via JWT Token --
 	claims := &auth.Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
@@ -88,7 +96,7 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error creating websocket connection:", err)
 	}
 
-	// -- Client Connected and Authenticated Here --
+	// -- Client Connected and Authenticated --
 
 	log.Printf("User connected to websocket server: %d \n", claims.UserID)
 
@@ -99,10 +107,12 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 			Action: "join_doc",
 			Value:  strconv.FormatUint(uint64(claims.UserID), 10),
 		},
+		SessionId: sessionId,
 		Conn: types.WebSocketConnection{
 			Conn: ws,
 		},
 	}
+
 	wsChan <- joinUserAction
 
 	// create new connection type and add them to list of connections
