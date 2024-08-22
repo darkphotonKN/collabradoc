@@ -69,3 +69,19 @@ func FindUserById(id uint) (model.User, error) {
 
 	return user, nil
 }
+
+// Queries for a single user based on ID
+func FindUserByEmail(email string) (model.User, error) {
+	db := db.DBCon
+
+	fmt.Println("attempt to find user with email:", email)
+
+	var user model.User
+	result := db.First(&user, "email = ?", email)
+
+	if result.Error != nil {
+		return user, result.Error
+	}
+
+	return user, nil
+}

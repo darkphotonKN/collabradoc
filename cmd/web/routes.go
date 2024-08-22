@@ -50,6 +50,7 @@ func (app *application) routes() http.Handler {
 	mux.With(auth.JWTMiddleware).Post("/api/livesession", livesession.CreateLiveSessionHandler)
 	mux.With(auth.JWTMiddleware).Get("/api/livesession", livesession.GetLiveSessionHandler)
 	mux.With(auth.JWTMiddleware).Get("/api/livesession/auth", livesession.AuthorizeLiveSessionHandler)
+	mux.With(auth.JWTMiddleware).Get("/api/livesession/invite", livesession.InviteToLiveSessionHandler)
 
 	// -- Comment Routes --
 	mux.With(auth.JWTMiddleware).Post("/api/comment", comment.CreateCommentHandler)

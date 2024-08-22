@@ -67,8 +67,9 @@ func ListenForWS(conn *types.WebSocketConnection, sessionId string) {
 
 		} else {
 
-			// handle new connection
+			// no error - handle new connection
 
+			// handling payload each subsequent request
 			// create websocket information packet for handling each unique connection
 			wsInfo := WebSocketInfo{
 				WebSocketPayload: WebSocketPayload{

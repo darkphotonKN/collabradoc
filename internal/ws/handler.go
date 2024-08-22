@@ -17,9 +17,6 @@ import (
 // channel to track websocket payloads
 var wsChan = make(chan WebSocketInfo)
 
-// tracks all connected clients
-
-// TODO: Testing, refactor old client connections with this one after
 // map of sessionIds that map to maps of websocket connections to client names
 var clientConnections = make(map[string]map[types.WebSocketConnection]string)
 
@@ -101,6 +98,8 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("User connected to websocket server: %d \n", claims.UserID)
 
+	// creating payload from initial websocket connection request
+
 	// send client with join_user action to websocket channel to add user
 	// to current list of maintained editors
 	joinUserAction := WebSocketInfo{
@@ -108,15 +107,16 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 			Action: "join_doc",
 			Value:  strconv.FormatUint(uint64(claims.UserID), 10),
 		},
-		SessionId: sessionId,
+		SessionId: sessionId, // for sessionId authorization and grouping
 		Conn: types.WebSocketConnection{
 			Conn: ws,
 		},
 	}
 
+	// websocket information is sent to the  wsChan channel for handling
 	wsChan <- joinUserAction
 
-	// create new connection type and add them to list of connections
+	// create new connection type
 	clientConnection := types.WebSocketConnection{
 		Conn: ws,
 	}

@@ -64,7 +64,26 @@ func AuthorizeLiveSessionService(userId uint, sessionId string) (bool, error) {
 	return true, nil
 }
 
-// -- Constructs Live Session URL --
+func InviteToliveSessionService(userId uint, email string, documentId uint) (model.LiveSession, error) {
+	sendingUser, err := user.FindUserById(userId)
+	if err != nil {
+		return model.LiveSession{}, fmt.Errorf("Error when retrieving user: %s", err)
+	}
+	fmt.Println(sendingUser)
+
+	targetUser, err := user.FindUserByEmail(email)
+	if err != nil {
+		return model.LiveSession{}, fmt.Errorf("Error when retrieving target user: %s", err)
+	}
+
+	fmt.Println("targetUser:", targetUser)
+
+	return model.LiveSession{}, nil
+}
+
+/**
+* Constructs Live Session URL
+**/
 func GenerateLiveSessionURL(sessionId string, documentId uint) LiveSessionLink {
 
 	domain := os.Getenv("SITE_DOMAIN")

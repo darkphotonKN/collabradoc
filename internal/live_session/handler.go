@@ -11,6 +11,10 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+/**
+* Creats a live session based on user's id from JWT token and the documentId
+* of the document they are creating a live session for.
+**/
 func CreateLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	userId, _ := request.ExtractUserID(r.Context())
@@ -62,6 +66,29 @@ func CreateLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)
+}
+
+/**
+* Invites a user to join a live session based on invitee's user id, the target user's
+* user's email, and the documentId in which they are sending the invite from.
+**/
+func InviteToLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
+	userId, _ := request.ExtractUserID(r.Context())
+
+	documentIdQuery := r.URL.Query().Get("documentId")
+	email := r.URL.Query().Get("email")
+
+	// convert to uint to conform to the actual documentId column
+	documentIdUint64, err := strconv.ParseUint(documentIdQuery, 10, 32)
+	documentId := uint(documentIdUint64)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	inviteLiveSessionRes, err := InviteToliveSessionService(userId, email, documentId)
+	fmt.Println(inviteLiveSessionRes)
 }
 
 func GetLiveSessionHandler(w http.ResponseWriter, r *http.Request) {

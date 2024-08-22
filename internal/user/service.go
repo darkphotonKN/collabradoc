@@ -75,3 +75,7 @@ func LoginUser(userLoginReq UserLoginRequest) (model.User, error) {
 func FindUserByIdService(id uint) (model.User, error) {
 	return FindUserById(id)
 }
+
+func FindUserByEmailService(email string) (model.User, error) {
+	return FindUserByEmail(email)
+}
