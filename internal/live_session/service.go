@@ -2,13 +2,12 @@ package livesession
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/darkphotonKN/collabradoc/internal/customerrors"
 	"github.com/darkphotonKN/collabradoc/internal/document"
 	model "github.com/darkphotonKN/collabradoc/internal/shared"
 	"github.com/darkphotonKN/collabradoc/internal/user"
 	"github.com/google/uuid"
+	"os"
 )
 
 func CreateLiveSessionService(userId uint, documentId uint) (model.LiveSession, error) {
@@ -36,15 +35,15 @@ func GenerateSessionID() string {
 	return uuid.NewString()
 }
 
-func GetLiveSessionService(userId uint, documentId uint) (LiveSessionLink, error) {
+func GetLiveSessionService(userId uint, documentId uint) (model.LiveSession, error) {
 	// validates live session belongs to the user, and retreives it
 	liveSession, err := QueryLiveSession(userId, documentId)
 
 	if err != nil {
-		return "", customerrors.LiveSessionUnauthorized
+		return liveSession, customerrors.LiveSessionUnauthorized
 	}
 
-	return GenerateLiveSessionURL(liveSession.SessionID, documentId), nil
+	return liveSession, nil
 }
 
 func AuthorizeLiveSessionService(userId uint, sessionId string) (bool, error) {
@@ -64,12 +63,13 @@ func AuthorizeLiveSessionService(userId uint, sessionId string) (bool, error) {
 	return true, nil
 }
 
-func InviteToliveSessionService(userId uint, email string, documentId uint) (model.LiveSession, error) {
+func InviteToliveSessionService(userId uint, email string, sessionId string) (model.LiveSession, error) {
+	// validate the user sending the invite and user being invited both exist
 	sendingUser, err := user.FindUserById(userId)
 	if err != nil {
 		return model.LiveSession{}, fmt.Errorf("Error when retrieving user: %s", err)
 	}
-	fmt.Println(sendingUser)
+	fmt.Println("sendingUser:", sendingUser)
 
 	targetUser, err := user.FindUserByEmail(email)
 	if err != nil {
@@ -77,6 +77,11 @@ func InviteToliveSessionService(userId uint, email string, documentId uint) (mod
 	}
 
 	fmt.Println("targetUser:", targetUser)
+
+	// add target to existing live session
+	liveSession, err := InsertUserToLiveSession(sendingUser, targetUser, sessionId)
+
+	fmt.Println("Live session:", liveSession)
 
 	return model.LiveSession{}, nil
 }

@@ -75,20 +75,31 @@ func CreateLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 func InviteToLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 	userId, _ := request.ExtractUserID(r.Context())
 
-	documentIdQuery := r.URL.Query().Get("documentId")
+	sessionId := r.URL.Query().Get("sessionId")
 	email := r.URL.Query().Get("email")
 
-	// convert to uint to conform to the actual documentId column
-	documentIdUint64, err := strconv.ParseUint(documentIdQuery, 10, 32)
-	documentId := uint(documentIdUint64)
+	inviteLiveSessionRes, err := InviteToliveSessionService(userId, email, sessionId)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	inviteLiveSessionRes, err := InviteToliveSessionService(userId, email, documentId)
 	fmt.Println(inviteLiveSessionRes)
+
+	liveSessionRes := model.Response[model.LiveSession]{
+		Status:  http.StatusOK,
+		Message: fmt.Sprintf("Successfully added %s to live session.", email),
+		Data:    inviteLiveSessionRes,
+	}
+
+	out, err := json.Marshal(liveSessionRes)
+
+	if err != nil {
+		fmt.Printf("Error when encoding created live session response: %s\n", err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
 }
 
 func GetLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
@@ -105,15 +116,15 @@ func GetLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	liveSessionLink, err := GetLiveSessionService(userId, documentId)
+	liveSession, err := GetLiveSessionService(userId, documentId)
 
-	liveSessionLinkRes := model.Response[LiveSessionLink]{
+	liveSessionRes := model.Response[model.LiveSession]{
 		Status:  http.StatusOK,
-		Message: "Generated new live session.",
-		Data:    liveSessionLink,
+		Message: "Current live session.",
+		Data:    liveSession,
 	}
 
-	out, err := json.Marshal(liveSessionLinkRes)
+	out, err := json.Marshal(liveSessionRes)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)

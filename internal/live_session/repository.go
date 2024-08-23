@@ -29,7 +29,7 @@ func QueryLiveSession(userId uint, documentId uint) (model.LiveSession, error) {
 
 	var liveSession model.LiveSession
 
-	result := db.Where("document_id =?", documentId).First(&liveSession)
+	result := db.Preload("Users").Where("document_id =?", documentId).First(&liveSession)
 
 	if result.Error != nil {
 		fmt.Println("result.Error:", result.Error)
@@ -54,4 +54,27 @@ func QueryLiveSessionForUser(userId uint, sessionId string) error {
 	}
 
 	return nil
+}
+
+func InsertUserToLiveSession(user model.User, newUser model.User, sessionId string) (model.LiveSession, error) {
+	db := db.DBCon
+
+	// get old record
+	var existingLiveSession model.LiveSession
+
+	result := db.Preload("Users").Where("session_id =?", sessionId).First(&existingLiveSession)
+
+	if result.Error != nil {
+		return model.LiveSession{}, result.Error
+	}
+
+	// insert new user into live session
+	existingLiveSession.Users = append(existingLiveSession.Users, newUser)
+
+	saveResult := db.Save(&existingLiveSession)
+	if saveResult.Error != nil {
+		return model.LiveSession{}, saveResult.Error
+	}
+
+	return existingLiveSession, nil
 }
