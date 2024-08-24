@@ -78,13 +78,14 @@ func InviteToLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId := r.URL.Query().Get("sessionId")
 	email := r.URL.Query().Get("email")
 
-	inviteLiveSessionRes, err := InviteToliveSessionService(userId, email, sessionId)
+	inviteLiveSessionRes, err := InviteToLiveSessionService(userId, email, sessionId)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	fmt.Println(inviteLiveSessionRes)
+
+	fmt.Printf("user invited to live session, %+v\n\n", inviteLiveSessionRes)
 
 	liveSessionRes := model.Response[model.LiveSession]{
 		Status:  http.StatusOK,

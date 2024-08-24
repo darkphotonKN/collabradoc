@@ -6,14 +6,27 @@ This application is for making a useable live collaboration editor. Mainly writt
 
 ### Current Features
 
+**v0.3.0**
+
 - Live edit for documents via websockets, and using binary communication protocol for a smoother experience.
 - Managing (save, edit) documents for each user.
 - Full authentication flow for safely storing users and their documents.
 
-### Planned Features
+**Latest in recent version**
 
-- Allowing users to invite and add others as collaborators seamlessly. [WIP]
+- Allowing users to invite and add others as collaborators seamlessly. [DONE]
 - Tracks created documents and comments for each user seperately. [WIP]
+
+### Upcoming Features
+
+**v0.3.1**
+
+- Bugfixes and quality of life improvements like updating response values.
+
+**v0.4.0**
+
+- Add email system for collaboration.
+- Add the initial stages of advanced live-doc editing features.
 
 ### The Websocket Server
 
@@ -30,3 +43,14 @@ The websocket setup sets up a single WS handler that servers each client that co
 The payloads are managed via a channel that recieves the payloads and are managed by another **goroutine** started at the root of the application. This goroutine handles each channel payload based on the pre-defined custom binary protocol that both the frontend nextjs application and this golang server follows.
 
 ### Custom Binary Communication Protocol
+
+_Details coming soon._
+
+### Live Editing Documents
+
+As detailed in the websocket servber section live editing documents was created via websockets connections and concurrently managing connected clients.
+
+A "live session" is created once per document and is used to initialize and authorize a document to be edited live.
+Collaborators are added to this live session when invited via email. This live session essentially creates a unique
+instance between these collaborators and they have their own goroutine in the websocket server handling their
+requests.

@@ -20,14 +20,27 @@ func CreateLiveSessionService(userId uint, documentId uint) (model.LiveSession, 
 
 	// validate document exists and belongs to specific user
 	doc, err := document.GetDocumentById(documentId, userId)
-	fmt.Println("err finding doc", err)
 
 	if err != nil {
+		fmt.Println("err finding doc", err)
 		return model.LiveSession{}, err
 	}
 
+	fmt.Printf("attempting to query with live session userId %d and documentId %d", user.ID, doc.ID)
+	// check if live session already exists
+	existingLiveSession, err := QueryLiveSession(user.ID, doc.ID)
+
+	if err == nil {
+		// live session exist, just return that one
+		fmt.Println("found existing live session")
+
+		return existingLiveSession, nil
+	}
+
+	// live session does not exist, generate unique session id and create it
 	sessionId := GenerateSessionID()
 
+	fmt.Println("Live session does not exist, creating...")
 	return CreateLiveSession(user, sessionId, doc)
 }
 
@@ -36,6 +49,8 @@ func GenerateSessionID() string {
 }
 
 func GetLiveSessionService(userId uint, documentId uint) (model.LiveSession, error) {
+	fmt.Printf("attempting to query with live session userId %d and documentId %d", userId, documentId)
+
 	// validates live session belongs to the user, and retreives it
 	liveSession, err := QueryLiveSession(userId, documentId)
 
@@ -63,27 +78,26 @@ func AuthorizeLiveSessionService(userId uint, sessionId string) (bool, error) {
 	return true, nil
 }
 
-func InviteToliveSessionService(userId uint, email string, sessionId string) (model.LiveSession, error) {
+func InviteToLiveSessionService(userId uint, email string, sessionId string) (model.LiveSession, error) {
 	// validate the user sending the invite and user being invited both exist
 	sendingUser, err := user.FindUserById(userId)
 	if err != nil {
 		return model.LiveSession{}, fmt.Errorf("Error when retrieving user: %s", err)
 	}
-	fmt.Println("sendingUser:", sendingUser)
 
 	targetUser, err := user.FindUserByEmail(email)
 	if err != nil {
 		return model.LiveSession{}, fmt.Errorf("Error when retrieving target user: %s", err)
 	}
 
-	fmt.Println("targetUser:", targetUser)
-
 	// add target to existing live session
 	liveSession, err := InsertUserToLiveSession(sendingUser, targetUser, sessionId)
 
-	fmt.Println("Live session:", liveSession)
+	if err != nil {
+		return model.LiveSession{}, err
+	}
 
-	return model.LiveSession{}, nil
+	return liveSession, nil
 }
 
 /**

@@ -76,5 +76,6 @@ func InsertUserToLiveSession(user model.User, newUser model.User, sessionId stri
 		return model.LiveSession{}, saveResult.Error
 	}
 
+	// fmt.Printf("Added user in live session %+v\n", existingLiveSession)
 	return existingLiveSession, nil
 }
