@@ -14,8 +14,8 @@ This application is for making a useable live collaboration editor. Mainly writt
 
 **Latest in recent version**
 
-- Allowing users to invite and add others as collaborators seamlessly. [DONE]
-- Tracks created documents and comments for each user seperately. [WIP]
+- Allowing users to invite and add others as collaborators seamlessly.
+- Tracks created documents and comments for each user seperately.
 
 ### Upcoming Features
 
@@ -48,9 +48,9 @@ _Details coming soon._
 
 ### Live Editing Documents
 
-As detailed in the websocket servber section live editing documents was created via websockets connections and concurrently managing connected clients.
+As detailed in the websocket server section live editing documents was created via websockets connections and concurrently managing connected clients.
 
-A "live session" is created once per document and is used to initialize and authorize a document to be edited live.
+A **live session** is created once per document and is used to initialize and authorize a document to be edited live.
 Collaborators are added to this live session when invited via email. This live session essentially creates a unique
 instance between these collaborators and they have their own goroutine in the websocket server handling their
 requests.
