@@ -35,7 +35,6 @@ func Shutdown() {
 * to a live session (to edit documents).
 **/
 func ListenForWS(conn *types.WebSocketConnection, sessionId string) {
-
 	defer func() {
 		conn.Close()
 		fmt.Println("Connection closed.")
@@ -66,7 +65,6 @@ func ListenForWS(conn *types.WebSocketConnection, sessionId string) {
 			break // only exits the loop, not entire function, allows for graceful exit
 
 		} else {
-
 			// no error - handle new connection
 
 			// handling payload each subsequent request
@@ -89,7 +87,7 @@ func ListenForWS(conn *types.WebSocketConnection, sessionId string) {
 }
 
 /**
-* Listens to the WebSocket CHANNEL
+* Listens to the WebSocket Channel
 *
 * This function is running concurrently at the start of the application.
 * Will handle all messages sent to the central channel and handle the
@@ -129,7 +127,7 @@ func ListenForWSChannel() {
 				continue
 
 			case "join_doc":
-				fmt.Printf("ADDING CLIENT with CONNECTION %v and NAME %s and for SESSIONID %s\n", event.Conn, event.Value, event.SessionId)
+				fmt.Printf("ADDING CLIENT %s and for SESSIONID %s\n", event.Value, event.SessionId)
 
 				// get user from db to store in current connection map
 				userId, err := strconv.ParseUint(event.Value, 10, 0)
@@ -146,9 +144,23 @@ func ListenForWSChannel() {
 				}
 
 				// add them to their respective live sessions under their own connections
-				temp := make(map[types.WebSocketConnection]string)
-				temp[event.Conn] = user.Name
-				clientConnections[event.SessionId] = temp
+				fmt.Printf("\n\n\nBEING SET IN SESSION ID: %s\n\n\n", event.SessionId)
+
+				// clientConnection["123"] [QEEIQWJ] "Kranti"
+
+				existClientConnections, ok := clientConnections[event.SessionId]
+
+				fmt.Printf("\n\n\nexistingClientConnections: %v, ok: %v\n\n\n", existClientConnections, ok)
+
+				// initialize if map is empty, prevent nil pointer exceptions
+				if !ok {
+					existClientConnections = make(map[types.WebSocketConnection]string)
+					clientConnections[event.SessionId] = existClientConnections
+				}
+
+				clientConnections[event.SessionId][event.Conn] = user.Name
+
+				fmt.Printf("\n\n\nexistingClientConnections UPDATED: %v \n\n\n", existClientConnections)
 
 				// encode message to binary
 				encodedMsg, err := commprotocol.EncodeMessage(commprotocol.JOIN, user.Name)

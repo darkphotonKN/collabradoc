@@ -64,7 +64,7 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// -- Client Being Authenticated via JWT Token --
+	// -- Connected WS Client Authenticated via JWT Token --
 	claims := &auth.Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
