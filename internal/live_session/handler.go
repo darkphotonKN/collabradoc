@@ -2,10 +2,12 @@ package livesession
 
 import (
 	"encoding/json"
+
 	"fmt"
 	"net/http"
 	"strconv"
 
+	"github.com/darkphotonKN/collabradoc/internal/document"
 	model "github.com/darkphotonKN/collabradoc/internal/shared"
 	"github.com/darkphotonKN/collabradoc/internal/utils/request"
 	"github.com/go-playground/validator/v10"
@@ -43,18 +45,18 @@ func CreateLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newLiveSession, err := CreateLiveSessionService(userId, uint(docIdInt64))
+	liveSession, err := CreateLiveSessionService(userId, uint(docIdInt64))
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	liveSessionLink := GenerateLiveSessionURL(newLiveSession.SessionID, newLiveSession.DocumentID)
+	liveSessionLink := GenerateLiveSessionURL(liveSession.SessionID, liveSession.DocumentID)
 
 	newLiveSessionRes := model.Response[LiveSessionLink]{
 		Status:  http.StatusCreated,
-		Message: fmt.Sprintf("Successfully created new live session %s for user %d", newLiveSession.SessionID, userId),
+		Message: fmt.Sprintf("Successfully created new live session %s for user %d", liveSession.SessionID, userId),
 		Data:    liveSessionLink,
 	}
 
@@ -103,6 +105,9 @@ func InviteToLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(out)
 }
 
+/**
+* Gets an exiting live session based on userId and documentId.
+**/
 func GetLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 	userId, _ := request.ExtractUserID(r.Context())
 
@@ -131,6 +136,9 @@ func GetLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(out)
 }
 
+/**
+* Authorizes a user's request to access a live session via userId and sessionId.
+**/
 func AuthorizeLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 	userId, _ := request.ExtractUserID(r.Context())
 
@@ -174,7 +182,51 @@ func AuthorizeLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("Error when encoding authorize live session handler response: %s\n", err)
 		}
 		w.Write(out)
+	}
+}
+
+/**
+* TODO: Update to emailing the user the live session or adding it to their personal docs.
+* Retrieves a user's accessible live sessions which docs don't directly belong to them.
+*
+* NOTE: (Temp) This is the temporary version of invited live sessions.
+**/
+func GetInvitedLiveSessionsHandler(w http.ResponseWriter, r *http.Request) {
+	userId, _ := request.ExtractUserID(r.Context())
+
+	liveSessionInvites, err := GetInvitedLiveSessionsService(userId)
+
+	fmt.Printf("liveSessionInvites: %+v", liveSessionInvites)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var liveSessionInvitesRes []LiveSessionInvitesRes
+
+	for _, liveSessionInvite := range liveSessionInvites {
+		liveSessionInvitesRes = append(liveSessionInvitesRes, LiveSessionInvitesRes{ID: liveSessionInvite.DocumentID,
+			CreatedAt:       liveSessionInvite.CreatedAt,
+			Title:           liveSessionInvite.Title,
+			IsActive:        liveSessionInvite.IsActive,
+			LiveSessionInfo: document.LiveSessionInfo{SessionID: liveSessionInvite.SessionID},
+		})
 
 	}
 
+	invitedLiveSessionsRes := model.Response[[]LiveSessionInvitesRes]{
+		Status:  http.StatusOK,
+		Message: "Successfully retrieved all currently invited live sessions.",
+		Data:    liveSessionInvitesRes,
+	}
+
+	out, err := json.Marshal(invitedLiveSessionsRes)
+
+	if err != nil {
+		fmt.Printf("Error when encoding authorize live session handler response: %s\n", err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
 }

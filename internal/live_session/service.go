@@ -2,12 +2,13 @@ package livesession
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/darkphotonKN/collabradoc/internal/customerrors"
 	"github.com/darkphotonKN/collabradoc/internal/document"
 	model "github.com/darkphotonKN/collabradoc/internal/shared"
 	"github.com/darkphotonKN/collabradoc/internal/user"
 	"github.com/google/uuid"
-	"os"
 )
 
 func CreateLiveSessionService(userId uint, documentId uint) (model.LiveSession, error) {
@@ -18,17 +19,10 @@ func CreateLiveSessionService(userId uint, documentId uint) (model.LiveSession, 
 		return model.LiveSession{}, err
 	}
 
-	// validate document exists and belongs to specific user
-	doc, err := document.GetDocumentById(documentId, userId)
+	fmt.Printf("attempting to query with live session userId %d and documentId %d", user.ID, documentId)
 
-	if err != nil {
-		fmt.Println("err finding doc", err)
-		return model.LiveSession{}, err
-	}
-
-	fmt.Printf("attempting to query with live session userId %d and documentId %d", user.ID, doc.ID)
-	// check if live session already exists
-	existingLiveSession, err := QueryLiveSession(user.ID, doc.ID)
+	// check if live session already exists, including one that user has been invited to
+	existingLiveSession, err := QueryLiveSession(user.ID, documentId)
 
 	if err == nil {
 		// live session exist, just return that one
@@ -37,8 +31,15 @@ func CreateLiveSessionService(userId uint, documentId uint) (model.LiveSession, 
 		return existingLiveSession, nil
 	}
 
-	// live session does not exist, generate unique session id and create it
+	// live session does not exist, generate unique session id and create as the owner
 	sessionId := GenerateSessionID()
+
+	doc, err := document.GetDocumentById(documentId, user.ID)
+
+	if err != nil {
+		fmt.Println("err finding doc", err)
+		return model.LiveSession{}, err
+	}
 
 	fmt.Println("Live session does not exist, creating...")
 	return CreateLiveSession(user, sessionId, doc)
@@ -110,4 +111,14 @@ func GenerateLiveSessionURL(sessionId string, documentId uint) LiveSessionLink {
 	// construct link with liveSession's sessionId which only allows authenticated users
 	// who own both the doc and the session to access
 	return LiveSessionLink(fmt.Sprintf("%s/docs-live?sessionId=%s&documentId=%d", domain, sessionId, documentId))
+}
+
+func GetInvitedLiveSessionsService(userId uint) ([]LiveSessionInvites, error) {
+	_, err := user.FindUserById(userId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return QueryAllNonOwnedLiveSessions(userId)
 }

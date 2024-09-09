@@ -24,19 +24,27 @@ func CreateLiveSession(user model.User, sessionId string, doc model.Document) (m
 	return newLiveSession, nil
 }
 
+/**
+* Queries for live sessions that the user is part of.
+**/
 func QueryLiveSession(userId uint, documentId uint) (model.LiveSession, error) {
 	db := db.DBCon
 
-	var liveSession model.LiveSession
+	// join users and live sessions
+	var existingLiveSession ExistingLiveSession
 
-	result := db.Preload("Users").Where("document_id =?", documentId).First(&liveSession)
+	r := db.Model(model.LiveSession{}).Select("live_sessions.session_id, live_sessions.document_id").Joins("JOIN live_session_users ON live_session_users.live_session_id = live_sessions.id").Joins("JOIN users ON users.id = live_session_users.user_id").Where("users.id = ? AND live_sessions.document_id = ?", userId, documentId).Scan(&existingLiveSession)
 
-	if result.Error != nil {
-		fmt.Println("result.Error:", result.Error)
-		return model.LiveSession{}, fmt.Errorf("Document does not belong to user you are attempting to create a live session with.")
+	if r.Error != nil {
+		fmt.Println("Problem querying all live session and user relations:", r.Error)
 	}
 
-	return liveSession, nil
+	fmt.Printf("\nFound relations %+v\n\n", existingLiveSession)
+
+	return model.LiveSession{
+		SessionID:  existingLiveSession.SessionID,
+		DocumentID: existingLiveSession.DocumentID,
+	}, nil
 }
 
 func QueryLiveSessionForUser(userId uint, sessionId string) error {
@@ -78,4 +86,28 @@ func InsertUserToLiveSession(user model.User, newUser model.User, sessionId stri
 
 	// fmt.Printf("Added user in live session %+v\n", existingLiveSession)
 	return existingLiveSession, nil
+}
+
+func QueryAllNonOwnedLiveSessions(userId uint) ([]LiveSessionInvites, error) {
+	db := db.DBCon
+
+	var liveSessionsRes []LiveSessionInvites
+
+	// queries for live sessions that the user is part of but of which is NOT the owner of
+	// the original document, effectively making this query find all live sessions in which
+	// the user was *invited*.
+	result := db.Model(&model.LiveSession{}).
+		Select("live_sessions.id, live_sessions.created_at, documents.title, live_sessions.document_id, live_sessions.session_id, live_sessions.is_active").
+		Joins("JOIN live_session_users ON live_session_users.live_session_id = live_sessions.id").
+		Joins("JOIN documents ON documents.id = live_sessions.document_id").
+		Where("live_session_users.user_id = ? AND documents.user_id <> ?", userId, userId).
+		Scan(&liveSessionsRes)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	fmt.Println("querying all live sessions:", liveSessionsRes)
+
+	return liveSessionsRes, nil
 }

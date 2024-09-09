@@ -24,7 +24,7 @@ type Comment struct {
 	Comment    string `gorm:"not null"`
 	Author     string `gorm:"not null"`
 	DocumentId uint   `gorm:"not null"` // foreign key in relation with Document
-	UserId     uint   `gorm:"not null"` //foreign key that relates to its User
+	UserId     uint   `gorm:"not null"` // foreign key that relates to its User
 }
 
 type User struct {
