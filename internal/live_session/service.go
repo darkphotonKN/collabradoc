@@ -24,16 +24,23 @@ func CreateLiveSessionService(userId uint, documentId uint) (model.LiveSession, 
 	// check if live session already exists, including one that user has been invited to
 	existingLiveSession, err := QueryLiveSession(user.ID, documentId)
 
-	if err == nil {
+	fmt.Printf("existingLiveSession: %+v", existingLiveSession)
+
+	if err != nil {
+		return model.LiveSession{}, err
+	}
+
+	// check existing sessionID exists
+	if existingLiveSession.SessionID != "" {
+
 		// live session exist, just return that one
 		fmt.Println("found existing live session")
-
 		return existingLiveSession, nil
 	}
 
 	// live session does not exist, generate unique session id and create as the owner
 	sessionId := GenerateSessionID()
-
+	// confirm user is document owner and retrieve the document
 	doc, err := document.GetDocumentById(documentId, user.ID)
 
 	if err != nil {

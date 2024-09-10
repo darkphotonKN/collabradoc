@@ -144,13 +144,8 @@ func ListenForWSChannel() {
 				}
 
 				// add them to their respective live sessions under their own connections
-				fmt.Printf("\n\n\nBEING SET IN SESSION ID: %s\n\n\n", event.SessionId)
-
-				// clientConnection["123"] [QEEIQWJ] "Kranti"
 
 				existClientConnections, ok := clientConnections[event.SessionId]
-
-				fmt.Printf("\n\n\nexistingClientConnections: %v, ok: %v\n\n\n", existClientConnections, ok)
 
 				// initialize if map is empty, prevent nil pointer exceptions
 				if !ok {
@@ -159,8 +154,6 @@ func ListenForWSChannel() {
 				}
 
 				clientConnections[event.SessionId][event.Conn] = user.Name
-
-				fmt.Printf("\n\n\nexistingClientConnections UPDATED: %v \n\n\n", existClientConnections)
 
 				// encode message to binary
 				encodedMsg, err := commprotocol.EncodeMessage(commprotocol.JOIN, user.Name)
@@ -223,9 +216,6 @@ func getEditorList(sessionId string) ([]byte, error) {
 	for _, name := range sessionUsers {
 		sessionUsernames = append(sessionUsernames, name)
 	}
-
-	fmt.Printf("NEW sessionUsernames %v\n", sessionUsernames)
-	fmt.Printf("NEW sessionUsernames length %d\n", len(sessionUsernames))
 
 	// encode slice of usernames
 	encodedSessionUsernames, err := commprotocol.EncodeMessage(commprotocol.EDITOR_LIST, sessionUsernames)

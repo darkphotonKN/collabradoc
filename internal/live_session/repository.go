@@ -36,10 +36,13 @@ func QueryLiveSession(userId uint, documentId uint) (model.LiveSession, error) {
 	r := db.Model(model.LiveSession{}).Select("live_sessions.session_id, live_sessions.document_id").Joins("JOIN live_session_users ON live_session_users.live_session_id = live_sessions.id").Joins("JOIN users ON users.id = live_session_users.user_id").Where("users.id = ? AND live_sessions.document_id = ?", userId, documentId).Scan(&existingLiveSession)
 
 	if r.Error != nil {
+		fmt.Println("RETURNING ERROR")
 		fmt.Println("Problem querying all live session and user relations:", r.Error)
+		return model.LiveSession{}, r.Error
 	}
 
 	fmt.Printf("\nFound relations %+v\n\n", existingLiveSession)
+	fmt.Println("RETURNING SUCCESS")
 
 	return model.LiveSession{
 		SessionID:  existingLiveSession.SessionID,
