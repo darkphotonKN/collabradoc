@@ -43,8 +43,10 @@ func (app *application) routes() http.Handler {
 	mux.Get("/ws", ws.WsHandler)
 
 	// -- Docs Routes --
+	mux.Get("/api/doc/community", document.GetCommunityDocsHandler)
 	mux.With(auth.JWTMiddleware).Get("/api/doc", document.GetDocumentsHandler)
 	mux.With(auth.JWTMiddleware).Post("/api/doc", document.CreateDocHandler)
+	mux.With(auth.JWTMiddleware).Patch("/api/doc/privacy/{documentId}", document.ToggleDocPrivacyHandler)
 
 	// -- Live Session Routes --
 	mux.With(auth.JWTMiddleware).Post("/api/livesession", livesession.CreateLiveSessionHandler)

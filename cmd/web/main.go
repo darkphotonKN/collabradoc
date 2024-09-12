@@ -89,7 +89,7 @@ func main() {
 	// Start Server
 	app.serve()
 
-	// Graceful shutdown setup
+	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 

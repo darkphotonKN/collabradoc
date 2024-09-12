@@ -41,6 +41,21 @@ func QueryDocuments(userId uint) ([]model.Document, error) {
 	return documents, nil
 }
 
+func QueryPublicDocuments() ([]model.Document, error) {
+	db := db.DBCon
+
+	var documents []model.Document
+
+	result := db.Where("privacy = ?", "public").Find(&documents)
+
+	if result.Error != nil {
+		fmt.Println("result.Error:", result.Error)
+		return documents, fmt.Errorf("No existing public documents.")
+	}
+
+	return documents, nil
+}
+
 func QueryDocumentById(id uint, userId uint) (model.Document, error) {
 	db := db.DBCon
 
@@ -54,4 +69,17 @@ func QueryDocumentById(id uint, userId uint) (model.Document, error) {
 	}
 
 	return document, nil
+}
+
+func UpdateDocument(doc model.Document) (model.Document, error) {
+	db := db.DBCon
+
+	result := db.Save(&doc)
+
+	if result.Error != nil {
+		fmt.Printf("Error when attempting to update doc: %s\n\n", result.Error)
+		return model.Document{}, result.Error
+	}
+
+	return doc, nil
 }

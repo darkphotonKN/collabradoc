@@ -8,6 +8,7 @@ type Document struct {
 	Content     string      `json:"content"`
 	UserId      uint        `gorm:"not null" json:"userId"` // foreign key in relation with User
 	Comment     []Comment   `gorm:"foreignKey:DocumentId" json:"comment"`
+	Privacy     string      `json:"privacy"`
 	LiveSession LiveSession `json:"liveSession"`
 }
 
@@ -40,5 +41,5 @@ type User struct {
 type Response[T any] struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
-	Data    T      `json:"data,omitempty"`
+	Data    T      `json:"data"`
 }

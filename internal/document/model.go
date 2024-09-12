@@ -6,6 +6,11 @@ import (
 	model "github.com/darkphotonKN/collabradoc/internal/shared"
 )
 
+const (
+	private = "private"
+	public  = "public"
+)
+
 type CreateDocumentReq struct {
 	Title   string `json:"title" validate:"required"`
 	Content string `json:"content" validate:"required"`
@@ -24,4 +29,5 @@ type DocumentRes struct {
 	UserId          uint            `json:"userId"`
 	LiveSessionInfo LiveSessionInfo `json:"liveSession"`
 	Comment         []model.Comment `json:"comment,omitempty"`
+	Privacy         string          `json:"privacy"`
 }
