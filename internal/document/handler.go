@@ -18,11 +18,11 @@ func GetDocumentsHandler(w http.ResponseWriter, r *http.Request) {
 
 	documents, err := GetDocuments(userId)
 
-	formatDocuments := make([]DocumentRes, len(documents))
+	formattedDocuments := make([]DocumentRes, len(documents))
 
 	// map documents to response-friendly documents
-	for _, doc := range documents {
-		formatDocuments = append(formatDocuments, DocumentRes{
+	for index, doc := range documents {
+		formattedDocuments[index] = DocumentRes{
 			ID:        doc.ID,
 			CreatedAt: doc.CreatedAt,
 			UpdatedAt: doc.UpdatedAt,
@@ -34,7 +34,7 @@ func GetDocumentsHandler(w http.ResponseWriter, r *http.Request) {
 			},
 			Comment: doc.Comment,
 			Privacy: doc.Privacy,
-		})
+		}
 	}
 
 	if err != nil {
@@ -45,7 +45,7 @@ func GetDocumentsHandler(w http.ResponseWriter, r *http.Request) {
 	documentsRes := model.Response[[]DocumentRes]{
 		Status:  http.StatusOK,
 		Message: "Succesfully retrieved all documents.",
-		Data:    formatDocuments,
+		Data:    formattedDocuments,
 	}
 
 	out, err := json.Marshal(documentsRes)
@@ -66,11 +66,11 @@ func GetCommunityDocsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	formatDocuments := make([]DocumentRes, len(documents))
+	formattedDocuments := make([]DocumentRes, len(documents))
 
 	// map documents to response-friendly documents
-	for _, doc := range documents {
-		formatDocuments = append(formatDocuments, DocumentRes{
+	for index, doc := range documents {
+		formattedDocuments[index] = DocumentRes{
 			ID:        doc.ID,
 			CreatedAt: doc.CreatedAt,
 			UpdatedAt: doc.UpdatedAt,
@@ -82,7 +82,7 @@ func GetCommunityDocsHandler(w http.ResponseWriter, r *http.Request) {
 			},
 			Comment: doc.Comment,
 			Privacy: doc.Privacy,
-		})
+		}
 	}
 
 	if err != nil {
@@ -90,12 +90,10 @@ func GetCommunityDocsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("formatDocuments:", formatDocuments)
-
 	documentsRes := model.Response[[]DocumentRes]{
 		Status:  http.StatusOK,
 		Message: "Succesfully retrieved all documents.",
-		Data:    formatDocuments,
+		Data:    formattedDocuments,
 	}
 
 	out, err := json.Marshal(documentsRes)

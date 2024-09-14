@@ -38,6 +38,8 @@ func QueryDocuments(userId uint) ([]model.Document, error) {
 		return documents, fmt.Errorf("No existing documents for this user.")
 	}
 
+	fmt.Printf("\nDocuments found:\n %+v\n\n", documents)
+
 	return documents, nil
 }
 
@@ -46,7 +48,7 @@ func QueryPublicDocuments() ([]model.Document, error) {
 
 	var documents []model.Document
 
-	result := db.Where("privacy = ?", "public").Find(&documents)
+	result := db.Preload("LiveSession").Where("privacy = ?", "public").Find(&documents)
 
 	if result.Error != nil {
 		fmt.Println("result.Error:", result.Error)
