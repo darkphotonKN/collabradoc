@@ -32,8 +32,9 @@ func GetDocumentsHandler(w http.ResponseWriter, r *http.Request) {
 			LiveSessionInfo: LiveSessionInfo{
 				SessionID: doc.LiveSession.SessionID,
 			},
-			Comment: doc.Comment,
-			Privacy: doc.Privacy,
+			Comment:       doc.Comment,
+			Privacy:       doc.Privacy,
+			AverageRating: 0,
 		}
 	}
 

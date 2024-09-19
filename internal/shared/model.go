@@ -4,12 +4,21 @@ import "gorm.io/gorm"
 
 type Document struct {
 	gorm.Model
-	Title       string      `gorm:"not null" json:"title"`
-	Content     string      `json:"content"`
-	UserId      uint        `gorm:"not null" json:"userId"` // foreign key in relation with User
-	Comment     []Comment   `gorm:"foreignKey:DocumentId" json:"comment"`
-	Privacy     string      `json:"privacy"`
-	LiveSession LiveSession `json:"liveSession"`
+	Title         string      `gorm:"not null" json:"title"`
+	Content       string      `json:"content"`
+	UserId        uint        `gorm:"not null" json:"userId"` // foreign key in relation with User
+	Comment       []Comment   `gorm:"foreignKey:DocumentId" json:"comment"`
+	Privacy       string      `json:"privacy"`
+	LiveSession   LiveSession `json:"liveSession"`
+	Rating        []Rating    `gorm:"foreignKey:DocumentId" json:"-"`
+	AverageRating float64     `json:"averageRating"`
+}
+
+type Rating struct {
+	gorm.Model
+	DocumentId uint `gorm:"not null"`
+	UserId     uint
+	Value      uint `gorm:"not null" json:"value"`
 }
 
 type LiveSession struct {
@@ -35,9 +44,10 @@ type User struct {
 	Password string     `gorm:"not null"`
 	Doc      []Document `gorm:"foreignKey:UserId"`
 	Comment  []Comment  `gorm:"foreignKey:UserId"`
+	Rating   []Rating   `gorm:"foreignKey:UserId"`
 }
 
-// Structuring Consistent Response Type Across API Requests
+// For Structuring Consistent Response Type Across API Requests
 type Response[T any] struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`

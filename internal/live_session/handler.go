@@ -18,7 +18,6 @@ import (
 * of the document they are creating a live session for.
 **/
 func CreateLiveSessionHandler(w http.ResponseWriter, r *http.Request) {
-
 	userId, _ := request.ExtractUserID(r.Context())
 
 	var req CreateLiveSessionReq

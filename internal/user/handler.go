@@ -119,7 +119,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		out, _ := json.Marshal(errRes)
-
+		fmt.Println("Status code of error:", status)
 		w.WriteHeader(status) // Set the HTTP status code
 		w.Write(out)
 		return
