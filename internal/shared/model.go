@@ -4,20 +4,18 @@ import "gorm.io/gorm"
 
 type Document struct {
 	gorm.Model
-	Title         string      `gorm:"not null" json:"title"`
-	Content       string      `json:"content"`
-	UserId        uint        `gorm:"not null" json:"userId"` // foreign key in relation with User
-	Comment       []Comment   `gorm:"foreignKey:DocumentId" json:"comment"`
-	Privacy       string      `json:"privacy"`
-	LiveSession   LiveSession `json:"liveSession"`
-	Rating        []Rating    `gorm:"foreignKey:DocumentId" json:"-"`
-	AverageRating float64     `json:"averageRating"`
+	Title       string      `gorm:"not null" json:"title"`
+	Content     string      `json:"content"`
+	UserId      uint        `gorm:"not null" json:"userId"` // foreign key in relation with User
+	Comment     []Comment   `gorm:"foreignKey:DocumentId" json:"comment"`
+	Privacy     string      `json:"privacy"`
+	LiveSession LiveSession `json:"liveSession"`
+	Ratings     []Rating    `gorm:"foreignKey:DocumentId" json:"-"`
 }
 
 type Rating struct {
 	gorm.Model
 	DocumentId uint `gorm:"not null"`
-	UserId     uint
 	Value      uint `gorm:"not null" json:"value"`
 }
 
@@ -26,7 +24,7 @@ type LiveSession struct {
 	SessionID  string `gorm:"not null;uniqueIndex" json:"session_id"`
 	DocumentID uint   `json:"document_id"`
 	IsActive   bool   `json:"isActive"`
-	Users      []User `gorm:"many2many:live_session_users" json:"users"`
+	Users      []User `gorm:"many2many:live_session_users" json:"users"` // many to many relation with users
 }
 
 type Comment struct {
@@ -44,7 +42,6 @@ type User struct {
 	Password string     `gorm:"not null"`
 	Doc      []Document `gorm:"foreignKey:UserId"`
 	Comment  []Comment  `gorm:"foreignKey:UserId"`
-	Rating   []Rating   `gorm:"foreignKey:UserId"`
 }
 
 // For Structuring Consistent Response Type Across API Requests

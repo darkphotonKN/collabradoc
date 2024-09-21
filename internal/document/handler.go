@@ -32,9 +32,8 @@ func GetDocumentsHandler(w http.ResponseWriter, r *http.Request) {
 			LiveSessionInfo: LiveSessionInfo{
 				SessionID: doc.LiveSession.SessionID,
 			},
-			Comment:       doc.Comment,
-			Privacy:       doc.Privacy,
-			AverageRating: 0,
+			Comment: doc.Comment,
+			Privacy: doc.Privacy,
 		}
 	}
 
@@ -67,25 +66,6 @@ func GetCommunityDocsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	formattedDocuments := make([]DocumentRes, len(documents))
-
-	// map documents to response-friendly documents
-	for index, doc := range documents {
-		formattedDocuments[index] = DocumentRes{
-			ID:        doc.ID,
-			CreatedAt: doc.CreatedAt,
-			UpdatedAt: doc.UpdatedAt,
-			Title:     doc.Title,
-			Content:   doc.Content,
-			UserId:    doc.UserId,
-			LiveSessionInfo: LiveSessionInfo{
-				SessionID: doc.LiveSession.SessionID,
-			},
-			Comment: doc.Comment,
-			Privacy: doc.Privacy,
-		}
-	}
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -94,7 +74,7 @@ func GetCommunityDocsHandler(w http.ResponseWriter, r *http.Request) {
 	documentsRes := model.Response[[]DocumentRes]{
 		Status:  http.StatusOK,
 		Message: "Succesfully retrieved all documents.",
-		Data:    formattedDocuments,
+		Data:    documents,
 	}
 
 	out, err := json.Marshal(documentsRes)

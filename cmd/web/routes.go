@@ -7,6 +7,7 @@ import (
 	"github.com/darkphotonKN/collabradoc/internal/comment"
 	"github.com/darkphotonKN/collabradoc/internal/document"
 	livesession "github.com/darkphotonKN/collabradoc/internal/live_session"
+	"github.com/darkphotonKN/collabradoc/internal/rating"
 	"github.com/darkphotonKN/collabradoc/internal/user"
 	"github.com/darkphotonKN/collabradoc/internal/utils/auth"
 	"github.com/darkphotonKN/collabradoc/internal/ws"
@@ -47,6 +48,9 @@ func (app *application) routes() http.Handler {
 	mux.With(auth.JWTMiddleware).Get("/api/doc", document.GetDocumentsHandler)
 	mux.With(auth.JWTMiddleware).Post("/api/doc", document.CreateDocHandler)
 	mux.With(auth.JWTMiddleware).Patch("/api/doc/privacy/{documentId}", document.ToggleDocPrivacyHandler)
+
+	// -- Rating Routes --
+	mux.Post("/api/rating", rating.CreateRatingHandler)
 
 	// -- Live Session Routes --
 	mux.With(auth.JWTMiddleware).Post("/api/livesession", livesession.CreateLiveSessionHandler)

@@ -24,7 +24,7 @@ func QueryRatingsByDocId(documentId uint) ([]model.Rating, error) {
 	return ratings, nil
 }
 
-func CreateRating(documentId uint, userId uint, value uint) (model.Rating, error) {
+func CreateRating(documentId uint, value uint) (model.Rating, error) {
 	db := db.DBCon
 
 	newRating := model.Rating{
@@ -36,7 +36,7 @@ func CreateRating(documentId uint, userId uint, value uint) (model.Rating, error
 
 	if result.Error != nil {
 		fmt.Println("result.Error:", result.Error)
-		return newRating, fmt.Errorf("No existing ratings for this document.")
+		return newRating, fmt.Errorf("Couldn't create rating for this document.")
 	}
 
 	fmt.Printf("\nRating Created:\n %+v\n\n", newRating)

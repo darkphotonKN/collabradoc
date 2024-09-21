@@ -1,5 +1,6 @@
 package rating
 
 type CreateRatingReq struct {
-	Value uint
+	Value      uint `json:"value"`
+	DocumentID uint `json:"documentId"`
 }

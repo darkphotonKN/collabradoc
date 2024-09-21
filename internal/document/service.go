@@ -3,6 +3,7 @@ package document
 import (
 	// "fmt"
 
+	"github.com/darkphotonKN/collabradoc/internal/rating"
 	model "github.com/darkphotonKN/collabradoc/internal/shared"
 )
 
@@ -11,11 +12,44 @@ func CreateDocumentService(doc CreateDocumentReq, userId uint) (model.Document, 
 }
 
 func GetDocuments(userId uint) ([]model.Document, error) {
+
 	return QueryDocuments(userId)
 }
 
-func GetCommunityDocsService() ([]model.Document, error) {
-	return QueryPublicDocuments()
+func GetCommunityDocsService() ([]DocumentRes, error) {
+	docs, err := QueryPublicDocuments()
+
+	if err != nil {
+		return []DocumentRes{}, err
+	}
+
+	docsRes := make([]DocumentRes, len(docs))
+
+	// get ratings and count average
+
+	for index, doc := range docs {
+		avgRating, err := rating.CountRatingsAvg(doc.ID)
+
+		if err != nil {
+			return []DocumentRes{}, err
+		}
+
+		docsRes[index] = DocumentRes{
+			ID:        doc.ID,
+			CreatedAt: doc.CreatedAt,
+			UpdatedAt: doc.UpdatedAt,
+			Title:     doc.Title,
+			Content:   doc.Content,
+			UserId:    doc.UserId,
+			LiveSessionInfo: LiveSessionInfo{
+				SessionID: doc.LiveSession.SessionID,
+			},
+			Comment:       doc.Comment,
+			Privacy:       doc.Privacy,
+			AverageRating: avgRating,
+		}
+	}
+	return docsRes, nil
 }
 
 func GetDocumentById(id uint, userId uint) (model.Document, error) {
