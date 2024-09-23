@@ -8,7 +8,6 @@ import (
 )
 
 func CreateRatingHandler(w http.ResponseWriter, r *http.Request) {
-
 	var req CreateRatingReq
 
 	err := json.NewDecoder(r.Body).Decode(&req)

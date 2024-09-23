@@ -80,7 +80,7 @@ func GetCommunityDocsHandler(w http.ResponseWriter, r *http.Request) {
 	out, err := json.Marshal(documentsRes)
 
 	if err != nil {
-		fmt.Println("Error occured when encoding into json.")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

@@ -22,6 +22,10 @@ func CountRatingsAvg(documentId uint) (float32, error) {
 		return 0, err
 	}
 
+	if len(ratings) == 0 {
+		return 0, nil
+	}
+
 	// calculate average
 	var length = float32(len(ratings))
 	var sum float32 = 0

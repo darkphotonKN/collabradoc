@@ -30,5 +30,5 @@ type DocumentRes struct {
 	LiveSessionInfo LiveSessionInfo `json:"liveSession"`
 	Comment         []model.Comment `json:"comment,omitempty"`
 	Privacy         string          `json:"privacy"`
-	AverageRating   float32         `json:"rating"`
+	AverageRating   float32         `json:"averageRating,omitempty"`
 }

@@ -3,6 +3,8 @@ package document
 import (
 	// "fmt"
 
+	"fmt"
+
 	"github.com/darkphotonKN/collabradoc/internal/rating"
 	model "github.com/darkphotonKN/collabradoc/internal/shared"
 )
@@ -26,9 +28,10 @@ func GetCommunityDocsService() ([]DocumentRes, error) {
 	docsRes := make([]DocumentRes, len(docs))
 
 	// get ratings and count average
-
 	for index, doc := range docs {
 		avgRating, err := rating.CountRatingsAvg(doc.ID)
+
+		fmt.Printf("avgRating %f\n", avgRating)
 
 		if err != nil {
 			return []DocumentRes{}, err
@@ -49,6 +52,8 @@ func GetCommunityDocsService() ([]DocumentRes, error) {
 			AverageRating: avgRating,
 		}
 	}
+
+	fmt.Printf("docRes %+v", docsRes)
 	return docsRes, nil
 }
 

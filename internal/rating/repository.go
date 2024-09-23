@@ -12,7 +12,7 @@ func QueryRatingsByDocId(documentId uint) ([]model.Rating, error) {
 
 	var ratings []model.Rating
 
-	result := db.Joins("JOIN document ON document.id = ratings.document_id", documentId).Find(&ratings)
+	result := db.Joins("JOIN documents ON documents.id = ratings.document_id").Where("documents.id = ?", documentId).Find(&ratings)
 
 	if result.Error != nil {
 		fmt.Println("result.Error:", result.Error)
