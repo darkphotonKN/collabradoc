@@ -10,15 +10,20 @@ import (
 
 	"github.com/darkphotonKN/collabradoc/internal/types"
 	"github.com/darkphotonKN/collabradoc/internal/utils/auth"
+	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/websocket"
 )
 
-// channel to track websocket payloads
-var wsChan = make(chan WebSocketInfo)
+// channels to track websocket payloads
+var wsChan = make(chan WebSocketInfo)                   // private channel
+var wsCommunityChan = make(chan WebSocketCommunityInfo) // public channel
 
 // map of sessionIds that map to maps of websocket connections to client names
 var clientConnections = make(map[string]map[types.WebSocketConnection]string)
+
+// map of documentId that map to maps of websocket connections to client names
+var communityClientConns = make(map[uint]map[types.WebSocketConnection]string)
 
 // response of payload sent back to clients via websocket
 type WebSocketResponse[T any] struct {
@@ -39,6 +44,12 @@ type WebSocketInfo struct {
 	Conn      types.WebSocketConnection
 }
 
+type WebSocketCommunityInfo struct {
+	WebSocketPayload
+	DocumentID uint
+	Conn       types.WebSocketConnection
+}
+
 // for upgrading response writer / request connections
 var upgradeConnection = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -46,7 +57,42 @@ var upgradeConnection = websocket.Upgrader{
 	CheckOrigin:     func(r *(http.Request)) bool { return true },
 }
 
-// update strandard response writer, request and header to a websocket connection
+/**
+* Handler for Public websocket connections for each community document.
+**/
+func WsCommunityHandler(w http.ResponseWriter, r *http.Request) {
+	ws, err := upgradeConnection.Upgrade(w, r, nil)
+
+	if err != nil {
+		log.Println("Error when creating websocket connection.")
+	}
+
+	documentIdStr := chi.URLParam(r, "documentId")
+	documentId, err := strconv.ParseUint(documentIdStr, 10, 0)
+
+	// -- Client Connected --
+	connectionPayload := WebSocketCommunityInfo{
+		WebSocketPayload: WebSocketPayload{
+			Action: "join_doc",
+			Value:  "Guest",
+		},
+		DocumentID: uint(documentId),
+		Conn: types.WebSocketConnection{
+			Conn: ws,
+		},
+	}
+
+	wsCommunityChan <- connectionPayload
+
+	go ListenForWSCommunity(&types.WebSocketConnection{
+		Conn: ws,
+	}, uint(documentId))
+
+}
+
+/**
+* Handler for Private Live Session websocket connections for each user-owned private document.
+**/
 func WsHandler(w http.ResponseWriter, r *http.Request) {
 	envKey := os.Getenv("JWT_SECRET_KEY")
 	jwtKey := []byte(envKey)

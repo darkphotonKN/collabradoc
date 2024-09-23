@@ -29,6 +29,7 @@ func Shutdown() {
 }
 
 /**
+* -- ListenForWS Private Connection Version --
 * Handles each unique client via websocket
 *
 * This function is ran concurrently for each unique client that connects
@@ -68,7 +69,7 @@ func ListenForWS(conn *types.WebSocketConnection, sessionId string) {
 			// no error - handle new connection
 
 			// handling payload each subsequent request
-			// create websocket information packet for handling each unique connection
+			// create websocket information packet for handling each unique connectionws service
 			wsInfo := WebSocketInfo{
 				WebSocketPayload: WebSocketPayload{
 					Action: payload.Action,
@@ -240,6 +241,63 @@ func broadcastToAllClients(encodedMsg []byte, sessionId string) {
 
 			// delete from client list
 			delete(clientConnections[sessionId], wsConn)
+		}
+	}
+}
+
+/**
+* -- ListenForWS Community Public Connection Version --
+* Handles each unique client via websocket
+*
+* This function is ran concurrently for each unique client that connects
+* to a public community document.
+**/
+
+func ListenForWSCommunity(conn *types.WebSocketConnection, documentId uint) {
+	defer func() {
+		conn.Close()
+		fmt.Println("Connection closed.")
+	}()
+
+	log.Println("Listening for websocket connection. All session clients", clientConnections)
+
+	var payload WebSocketCommunityInfo
+
+	for {
+		err := conn.ReadJSON(&payload)
+
+		if err != nil {
+			// handle unexpected client errors
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				fmt.Printf("Unexpected Close Error: %v\n", err)
+
+				// unexepted connection errors, delete user from the community connection pool
+				delete(communityClientConns[documentId], *conn)
+			} else {
+				fmt.Printf("JSON Error: %v\n", err)
+
+				// remove client from connection
+				delete(communityClientConns[documentId], *conn)
+
+				break // only exits the loop, not entire function, allows for graceful exit
+
+			}
+
+		} else {
+			// handling payload each subsequent request
+			// create websocket information packet for handling each unique connectionws service
+			message := WebSocketCommunityInfo{
+				WebSocketPayload: WebSocketPayload{
+					Action: payload.Action,
+					Value:  payload.Value,
+				},
+				DocumentID: documentId,
+				Conn:       *conn,
+			}
+
+			log.Printf("payload: %+v", payload)
+
+			wsCommunityChan <- message
 		}
 	}
 }

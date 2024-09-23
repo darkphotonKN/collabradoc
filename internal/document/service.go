@@ -14,10 +14,12 @@ func CreateDocumentService(doc CreateDocumentReq, userId uint) (model.Document, 
 }
 
 func GetDocuments(userId uint) ([]model.Document, error) {
-
 	return QueryDocuments(userId)
 }
 
+/**
+* Gets all community (public) documents.
+**/
 func GetCommunityDocsService() ([]DocumentRes, error) {
 	docs, err := QueryPublicDocuments()
 
