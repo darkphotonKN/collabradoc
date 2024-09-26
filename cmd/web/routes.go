@@ -16,7 +16,7 @@ import (
 	"github.com/go-chi/cors"
 )
 
-func (app *application) routes() http.Handler {
+func (app *application) routes(wss *ws.WebSocketService) http.Handler {
 	mux := chi.NewRouter()
 
 	// handle cors
@@ -41,9 +41,9 @@ func (app *application) routes() http.Handler {
 	*************************/
 
 	// -- WebSocket Routes --
-	mux.Get("/ws", ws.WsHandler)
+	mux.Get("/ws", wss.WsHandler)
 
-	mux.Get("/ws/public", ws.WsCommunityHandler)
+	mux.Get("/ws/public", wss.WsCommunityHandler)
 
 	// -- Docs Routes --
 	mux.Get("/api/doc/community", document.GetCommunityDocsHandler)

@@ -15,16 +15,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// channels to track websocket payloads
-var wsChan = make(chan WebSocketInfo)                   // private channel
-var wsCommunityChan = make(chan WebSocketCommunityInfo) // public channel
-
-// map of sessionIds that map to maps of websocket connections to client names
-var clientConnections = make(map[string]map[types.WebSocketConnection]string)
-
-// map of documentId that map to maps of websocket connections to client names
-var communityClientConns = make(map[uint]map[types.WebSocketConnection]string)
-
 // response of payload sent back to clients via websocket
 type WebSocketResponse[T any] struct {
 	Action string `json:"action"`
@@ -59,7 +49,7 @@ var upgradeConnection = websocket.Upgrader{
 /**
 * Handler for Public websocket connections for each community document.
 **/
-func WsCommunityHandler(w http.ResponseWriter, r *http.Request) {
+func (wss *WebSocketService) WsCommunityHandler(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgradeConnection.Upgrade(w, r, nil)
 
 	if err != nil {
@@ -81,9 +71,9 @@ func WsCommunityHandler(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	wsCommunityChan <- connectionPayload
+	wss.wsCommunityChan <- connectionPayload
 
-	go ListenForWSCommunity(&types.WebSocketConnection{
+	go wss.ListenForWSCommunity(&types.WebSocketConnection{
 		Conn: ws,
 	}, uint(documentId))
 
@@ -92,7 +82,7 @@ func WsCommunityHandler(w http.ResponseWriter, r *http.Request) {
 /**
 * Handler for Private Live Session websocket connections for each user-owned private document.
 **/
-func WsHandler(w http.ResponseWriter, r *http.Request) {
+func (wss *WebSocketService) WsHandler(w http.ResponseWriter, r *http.Request) {
 	envKey := os.Getenv("JWT_SECRET_KEY")
 	jwtKey := []byte(envKey)
 
@@ -157,7 +147,7 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// websocket information is sent to the  wsChan channel for handling
-	wsChan <- joinUserAction
+	wss.wsChan <- joinUserAction
 
 	// create new connection type
 	clientConnection := types.WebSocketConnection{
@@ -165,7 +155,7 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// start goroutine thread to listen to all future incoming payloads
-	go ListenForWS(&clientConnection, sessionId)
+	go wss.ListenForWS(&clientConnection, sessionId)
 
 	if err != nil {
 		log.Println("Error when writing back to client:", err)

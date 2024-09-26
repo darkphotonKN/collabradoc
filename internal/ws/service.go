@@ -12,6 +12,37 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type WebSocketService struct {
+	// channels for transporting payloads
+	wsChan          chan WebSocketInfo
+	wsCommunityChan chan WebSocketCommunityInfo
+
+	// maps to hold connected websocket user instances
+	clientConnections    map[string]map[types.WebSocketConnection]string
+	communityClientConns map[uint]map[types.WebSocketConnection]string
+
+	mu sync.Mutex
+}
+
+func NewWebSocketService() *WebSocketService {
+	// channels to track websocket payloads
+	var wsChan = make(chan WebSocketInfo)                   // private channel
+	var wsCommunityChan = make(chan WebSocketCommunityInfo) // public channel
+
+	// map of sessionIds that map to maps of websocket connections to client names
+	var clientConnections = make(map[string]map[types.WebSocketConnection]string)
+
+	// map of documentId that map to maps of websocket connections to client names
+	var communityClientConns = make(map[uint]map[types.WebSocketConnection]string)
+
+	return &WebSocketService{
+		wsChan:               wsChan,
+		wsCommunityChan:      wsCommunityChan,
+		clientConnections:    clientConnections,
+		communityClientConns: communityClientConns,
+	}
+}
+
 var (
 	mu       sync.Mutex
 	shutdown = make(chan struct{})
@@ -35,13 +66,13 @@ func Shutdown() {
 * This function is ran concurrently for each unique client that connects
 * to a live session (to edit documents).
 **/
-func ListenForWS(conn *types.WebSocketConnection, sessionId string) {
+func (w *WebSocketService) ListenForWS(conn *types.WebSocketConnection, sessionId string) {
 	defer func() {
 		conn.Close()
 		fmt.Println("Connection closed.")
 	}()
 
-	log.Println("Listening for websocket connection. All session clients", clientConnections)
+	log.Println("Listening for websocket connection. All session clients", w.clientConnections)
 
 	var payload WebSocketPayload
 
@@ -55,12 +86,12 @@ func ListenForWS(conn *types.WebSocketConnection, sessionId string) {
 				fmt.Printf("Unexpected Close Error: %v\n", err)
 
 				// remove client from connection
-				delete(clientConnections[sessionId], *conn)
+				delete(w.clientConnections[sessionId], *conn)
 			} else {
 				fmt.Printf("JSON Error: %v\n", err)
 
 				// remove client from connection
-				delete(clientConnections[sessionId], *conn)
+				delete(w.clientConnections[sessionId], *conn)
 			}
 
 			break // only exits the loop, not entire function, allows for graceful exit
@@ -82,7 +113,7 @@ func ListenForWS(conn *types.WebSocketConnection, sessionId string) {
 			log.Printf("payload: %+v", payload)
 
 			// send payload back to websocket channel
-			wsChan <- wsInfo
+			w.wsChan <- wsInfo
 		}
 	}
 }
@@ -94,7 +125,7 @@ func ListenForWS(conn *types.WebSocketConnection, sessionId string) {
 * Will handle all messages sent to the central channel and handle the
 * messages accordingly.
 **/
-func ListenForWSChannel() {
+func (w *WebSocketService) ListenForWSChannel() {
 	log.Println("Started listening concurrently for websocket connections on a goroutine")
 
 	for {
@@ -102,7 +133,7 @@ func ListenForWSChannel() {
 		select {
 
 		// handle incoming websocket events
-		case event := <-wsChan:
+		case event := <-w.wsChan:
 
 			// storing websocket payload coming from wsChan
 
@@ -113,7 +144,7 @@ func ListenForWSChannel() {
 			case "editor_list":
 
 				// get list of client for user
-				list, err := getEditorList(event.SessionId)
+				list, err := w.getEditorList(event.SessionId)
 
 				if err != nil {
 					encodedErrMsg, _ := commprotocol.EncodeMessage(commprotocol.SYSTEM_MSG, fmt.Sprintf("Error when retrieving list of users: %v", err))
@@ -121,7 +152,7 @@ func ListenForWSChannel() {
 					event.Conn.WriteMessage(websocket.BinaryMessage, encodedErrMsg)
 				}
 
-				broadcastToAllClients(list, event.SessionId)
+				w.broadcastToAllClients(list, event.SessionId)
 
 				// skip rest of function and continue listening for further websocket messages
 				continue
@@ -145,15 +176,15 @@ func ListenForWSChannel() {
 
 				// add them to their respective live sessions under their own connections
 
-				existClientConnections, ok := clientConnections[event.SessionId]
+				existClientConnections, ok := w.clientConnections[event.SessionId]
 
 				// initialize if map is empty, prevent nil pointer exceptions
 				if !ok {
 					existClientConnections = make(map[types.WebSocketConnection]string)
-					clientConnections[event.SessionId] = existClientConnections
+					w.clientConnections[event.SessionId] = existClientConnections
 				}
 
-				clientConnections[event.SessionId][event.Conn] = user.Name
+				w.clientConnections[event.SessionId][event.Conn] = user.Name
 
 				// encode message to binary
 				encodedMsg, err := commprotocol.EncodeMessage(commprotocol.JOIN, user.Name)
@@ -164,7 +195,7 @@ func ListenForWSChannel() {
 				}
 
 				// get current editor client list in binary
-				encodedEditors, err := getEditorList(event.SessionId)
+				encodedEditors, err := w.getEditorList(event.SessionId)
 				fmt.Printf("encoded editor list %v\n", encodedEditors)
 
 				if err != nil {
@@ -174,16 +205,16 @@ func ListenForWSChannel() {
 				}
 
 				// send binary message to all users saying who has joined
-				broadcastToAllClients(encodedMsg, event.SessionId)
+				w.broadcastToAllClients(encodedMsg, event.SessionId)
 
 				// send list of current editors back to all clients
-				broadcastToAllClients(encodedEditors, event.SessionId)
+				w.broadcastToAllClients(encodedEditors, event.SessionId)
 
 				continue
 
 			// when user disconnects
 			case "disconnected":
-				disconnectedUser := clientConnections[event.SessionId][event.Conn]
+				disconnectedUser := w.clientConnections[event.SessionId][event.Conn]
 
 				fmt.Printf("User %s disconnected\n", disconnectedUser)
 
@@ -191,7 +222,7 @@ func ListenForWSChannel() {
 				event.Conn.Close()
 
 				// new delete that user
-				delete(clientConnections[event.SessionId], event.Conn)
+				delete(w.clientConnections[event.SessionId], event.Conn)
 
 			default:
 				// not matching anything, we send back generic response
@@ -206,10 +237,10 @@ func ListenForWSChannel() {
 }
 
 // get the clients list and package it to fit action and message
-func getEditorList(sessionId string) ([]byte, error) {
+func (w *WebSocketService) getEditorList(sessionId string) ([]byte, error) {
 
 	// retreive corresponding session map for users
-	sessionUsers := clientConnections[sessionId]
+	sessionUsers := w.clientConnections[sessionId]
 	sessionUsernames := make([]string, len(sessionUsers))
 
 	// convert clientConnections' current session connections (sessionUsers) to a slice of strings (names)
@@ -229,8 +260,8 @@ func getEditorList(sessionId string) ([]byte, error) {
 	return encodedSessionUsernames, nil
 }
 
-func broadcastToAllClients(encodedMsg []byte, sessionId string) {
-	sessionClients := clientConnections[sessionId]
+func (w *WebSocketService) broadcastToAllClients(encodedMsg []byte, sessionId string) {
+	sessionClients := w.clientConnections[sessionId]
 	for wsConn := range sessionClients {
 		err := wsConn.Conn.WriteMessage(websocket.BinaryMessage, encodedMsg)
 
@@ -239,7 +270,7 @@ func broadcastToAllClients(encodedMsg []byte, sessionId string) {
 			wsConn.Conn.Close()
 
 			// delete from client list
-			delete(clientConnections[sessionId], wsConn)
+			delete(w.clientConnections[sessionId], wsConn)
 		}
 	}
 }
@@ -252,13 +283,13 @@ func broadcastToAllClients(encodedMsg []byte, sessionId string) {
 * to a public community document.
 **/
 
-func ListenForWSCommunity(conn *types.WebSocketConnection, documentId uint) {
+func (w *WebSocketService) ListenForWSCommunity(conn *types.WebSocketConnection, documentId uint) {
 	defer func() {
 		conn.Close()
 		fmt.Println("Connection closed.")
 	}()
 
-	log.Println("Listening for websocket connection. All session clients", clientConnections)
+	log.Println("Listening for websocket connection. All session clients", w.clientConnections)
 
 	var payload WebSocketCommunityInfo
 
@@ -271,12 +302,12 @@ func ListenForWSCommunity(conn *types.WebSocketConnection, documentId uint) {
 				fmt.Printf("Unexpected Close Error: %v\n", err)
 
 				// unexepted connection errors, delete user from the community connection pool
-				delete(communityClientConns[documentId], *conn)
+				delete(w.communityClientConns[documentId], *conn)
 			} else {
 				fmt.Printf("JSON Error: %v\n", err)
 
 				// remove client from connection
-				delete(communityClientConns[documentId], *conn)
+				delete(w.communityClientConns[documentId], *conn)
 
 				break // only exits the loop, not entire function, allows for graceful exit
 
@@ -296,7 +327,7 @@ func ListenForWSCommunity(conn *types.WebSocketConnection, documentId uint) {
 
 			log.Printf("payload: %+v", payload)
 
-			wsCommunityChan <- message
+			w.wsCommunityChan <- message
 		}
 	}
 }

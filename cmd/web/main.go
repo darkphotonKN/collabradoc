@@ -39,10 +39,10 @@ type application struct {
 }
 
 // Set Up Server
-func (app *application) serve() error {
+func (app *application) serve(wss *ws.WebSocketService) error {
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%s", app.config.port),
-		Handler:           app.routes(),
+		Handler:           app.routes(wss),
 		IdleTimeout:       30 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
@@ -82,12 +82,14 @@ func main() {
 		log.Fatalf("Could not initialize DB table products.")
 	}
 
-	// start websocket listener goroutine
+	// setup instance for websocket service
+	wss := ws.NewWebSocketService()
 
-	go ws.ListenForWSChannel()
+	// start websocket listener goroutine
+	go wss.ListenForWSChannel()
 
 	// Start Server
-	app.serve()
+	app.serve(wss)
 
 	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
