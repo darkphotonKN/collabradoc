@@ -43,7 +43,7 @@ func (app *application) routes() http.Handler {
 	// -- WebSocket Routes --
 	mux.Get("/ws", ws.WsHandler)
 
-	mux.Get("ws/public", ws.WsPublicHandler)
+	mux.Get("/ws/public", ws.WsCommunityHandler)
 
 	// -- Docs Routes --
 	mux.Get("/api/doc/community", document.GetCommunityDocsHandler)

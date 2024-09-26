@@ -98,7 +98,6 @@ func ListenForWSChannel() {
 	log.Println("Started listening concurrently for websocket connections on a goroutine")
 
 	for {
-
 		// handle different types of channels
 		select {
 

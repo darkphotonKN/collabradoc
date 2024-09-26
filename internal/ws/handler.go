@@ -31,13 +31,12 @@ type WebSocketResponse[T any] struct {
 	Value  T      `json:"value"`
 }
 
-// Payload for sending / recieving Websocket Information
+// Payload for recieving Websocket Information
 type WebSocketPayload struct {
 	Action string `json:"action"`
 	Value  string `json:"value"`
 }
 
-// For internal websocket tracking
 type WebSocketInfo struct {
 	WebSocketPayload
 	SessionId string
@@ -99,11 +98,9 @@ func WsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// extract the token from the query param
 	tokenString := r.URL.Query().Get("token")
-	fmt.Printf("tokenString: %s\n", tokenString)
 
 	// get sessionId from the query params
 	sessionId := r.URL.Query().Get("sessionId")
-	fmt.Printf("sessionId: %s\n", sessionId)
 
 	if tokenString == "" {
 		http.Error(w, "No token in connection.", http.StatusUnauthorized)
