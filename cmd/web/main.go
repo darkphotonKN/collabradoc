@@ -88,10 +88,10 @@ func main() {
 	// start websocket listener goroutine
 	go wss.ListenForWSChannel()
 
-	// Start Server
-	app.serve(wss)
+	// start server
+	app.serve(wss) // inject websocket service instance for the routes
 
-	// Graceful shutdown
+	// for graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 

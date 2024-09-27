@@ -66,13 +66,13 @@ func Shutdown() {
 * This function is ran concurrently for each unique client that connects
 * to a live session (to edit documents).
 **/
-func (w *WebSocketService) ListenForWS(conn *types.WebSocketConnection, sessionId string) {
+func (wss *WebSocketService) ListenForWS(conn *types.WebSocketConnection, sessionId string) {
 	defer func() {
 		conn.Close()
 		fmt.Println("Connection closed.")
 	}()
 
-	log.Println("Listening for websocket connection. All session clients", w.clientConnections)
+	log.Println("Listening for websocket connection. All session clients", wss.clientConnections)
 
 	var payload WebSocketPayload
 
@@ -86,12 +86,12 @@ func (w *WebSocketService) ListenForWS(conn *types.WebSocketConnection, sessionI
 				fmt.Printf("Unexpected Close Error: %v\n", err)
 
 				// remove client from connection
-				delete(w.clientConnections[sessionId], *conn)
+				delete(wss.clientConnections[sessionId], *conn)
 			} else {
 				fmt.Printf("JSON Error: %v\n", err)
 
 				// remove client from connection
-				delete(w.clientConnections[sessionId], *conn)
+				delete(wss.clientConnections[sessionId], *conn)
 			}
 
 			break // only exits the loop, not entire function, allows for graceful exit
@@ -113,19 +113,17 @@ func (w *WebSocketService) ListenForWS(conn *types.WebSocketConnection, sessionI
 			log.Printf("payload: %+v", payload)
 
 			// send payload back to websocket channel
-			w.wsChan <- wsInfo
+			wss.wsChan <- wsInfo
 		}
 	}
 }
 
 /**
-* Listens to the WebSocket Channel
-*
-* This function is running concurrently at the start of the application.
-* Will handle all messages sent to the central channel and handle the
-* messages accordingly.
+* This function is set to run concurrently at the start of the application.
+* Will handle all messages sent to this central channel and the messages
+* will be handled depending on the action value.
 **/
-func (w *WebSocketService) ListenForWSChannel() {
+func (wss *WebSocketService) ListenForWSChannel() {
 	log.Println("Started listening concurrently for websocket connections on a goroutine")
 
 	for {
@@ -133,102 +131,22 @@ func (w *WebSocketService) ListenForWSChannel() {
 		select {
 
 		// handle incoming websocket events
-		case event := <-w.wsChan:
+		case event := <-wss.wsChan:
 
 			// storing websocket payload coming from wsChan
 
 			log.Println("event value received:", event.Value)
 			// TODO: Decode to figure out action and value
 			// Match based on Action
-			switch event.Action {
-			case "editor_list":
+			err := wss.actionHandler(event)
 
-				// get list of client for user
-				list, err := w.getEditorList(event.SessionId)
-
-				if err != nil {
-					encodedErrMsg, _ := commprotocol.EncodeMessage(commprotocol.SYSTEM_MSG, fmt.Sprintf("Error when retrieving list of users: %v", err))
-
-					event.Conn.WriteMessage(websocket.BinaryMessage, encodedErrMsg)
-				}
-
-				w.broadcastToAllClients(list, event.SessionId)
-
-				// skip rest of function and continue listening for further websocket messages
-				continue
-
-			case "join_doc":
-				fmt.Printf("ADDING CLIENT %s and for SESSIONID %s\n", event.Value, event.SessionId)
-
-				// get user from db to store in current connection map
-				userId, err := strconv.ParseUint(event.Value, 10, 0)
-				if err != nil {
-					fmt.Printf("Error when attempting to parse uint from user id:\n", userId)
-				}
-
-				user, err := user.FindUserById(uint(userId))
-
-				if err != nil {
-					encodedErrMsg, _ := commprotocol.EncodeMessage(commprotocol.SYSTEM_MSG, fmt.Sprintf("Error when retrieving user with connected id: %v", err))
-					event.Conn.WriteMessage(websocket.BinaryMessage, encodedErrMsg)
-					continue // continue to next message read
-				}
-
-				// add them to their respective live sessions under their own connections
-
-				existClientConnections, ok := w.clientConnections[event.SessionId]
-
-				// initialize if map is empty, prevent nil pointer exceptions
-				if !ok {
-					existClientConnections = make(map[types.WebSocketConnection]string)
-					w.clientConnections[event.SessionId] = existClientConnections
-				}
-
-				w.clientConnections[event.SessionId][event.Conn] = user.Name
-
-				// encode message to binary
-				encodedMsg, err := commprotocol.EncodeMessage(commprotocol.JOIN, user.Name)
-				log.Println("encodedMessage:", encodedMsg)
-
-				if err != nil {
-					log.Printf("Error occured when attempting to encode message %s, err was %s", event.Value, err)
-				}
-
-				// get current editor client list in binary
-				encodedEditors, err := w.getEditorList(event.SessionId)
-				fmt.Printf("encoded editor list %v\n", encodedEditors)
-
-				if err != nil {
-					encodedErrMsg, _ := commprotocol.EncodeMessage(commprotocol.SYSTEM_MSG, fmt.Sprintf("Error when retrieving list of users: %v", err))
-
-					event.Conn.WriteMessage(websocket.BinaryMessage, encodedErrMsg)
-				}
-
-				// send binary message to all users saying who has joined
-				w.broadcastToAllClients(encodedMsg, event.SessionId)
-
-				// send list of current editors back to all clients
-				w.broadcastToAllClients(encodedEditors, event.SessionId)
-
-				continue
-
-			// when user disconnects
-			case "disconnected":
-				disconnectedUser := w.clientConnections[event.SessionId][event.Conn]
-
-				fmt.Printf("User %s disconnected\n", disconnectedUser)
-
-				// close the channel
-				event.Conn.Close()
-
-				// new delete that user
-				delete(w.clientConnections[event.SessionId], event.Conn)
-
-			default:
-				// not matching anything, we send back generic response
-
+			if err != nil {
+				fmt.Println("Error occured during action handler, err:", err)
 				continue
 			}
+
+		// handle public websocket channel
+		case event := <-wss.wsCommunityChan:
 
 		case <-shutdown:
 			log.Println("Stopped listening to websocket channel.")
@@ -237,10 +155,10 @@ func (w *WebSocketService) ListenForWSChannel() {
 }
 
 // get the clients list and package it to fit action and message
-func (w *WebSocketService) getEditorList(sessionId string) ([]byte, error) {
+func (wss *WebSocketService) getEditorList(sessionId string) ([]byte, error) {
 
 	// retreive corresponding session map for users
-	sessionUsers := w.clientConnections[sessionId]
+	sessionUsers := wss.clientConnections[sessionId]
 	sessionUsernames := make([]string, len(sessionUsers))
 
 	// convert clientConnections' current session connections (sessionUsers) to a slice of strings (names)
@@ -260,8 +178,8 @@ func (w *WebSocketService) getEditorList(sessionId string) ([]byte, error) {
 	return encodedSessionUsernames, nil
 }
 
-func (w *WebSocketService) broadcastToAllClients(encodedMsg []byte, sessionId string) {
-	sessionClients := w.clientConnections[sessionId]
+func (wss *WebSocketService) broadcastToAllClients(encodedMsg []byte, sessionId string) {
+	sessionClients := wss.clientConnections[sessionId]
 	for wsConn := range sessionClients {
 		err := wsConn.Conn.WriteMessage(websocket.BinaryMessage, encodedMsg)
 
@@ -270,7 +188,7 @@ func (w *WebSocketService) broadcastToAllClients(encodedMsg []byte, sessionId st
 			wsConn.Conn.Close()
 
 			// delete from client list
-			delete(w.clientConnections[sessionId], wsConn)
+			delete(wss.clientConnections[sessionId], wsConn)
 		}
 	}
 }
@@ -283,13 +201,13 @@ func (w *WebSocketService) broadcastToAllClients(encodedMsg []byte, sessionId st
 * to a public community document.
 **/
 
-func (w *WebSocketService) ListenForWSCommunity(conn *types.WebSocketConnection, documentId uint) {
+func (wss *WebSocketService) ListenForWSCommunity(conn *types.WebSocketConnection, documentId uint) {
 	defer func() {
 		conn.Close()
 		fmt.Println("Connection closed.")
 	}()
 
-	log.Println("Listening for websocket connection. All session clients", w.clientConnections)
+	log.Println("Listening for websocket connection. All session clients", wss.clientConnections)
 
 	var payload WebSocketCommunityInfo
 
@@ -302,12 +220,12 @@ func (w *WebSocketService) ListenForWSCommunity(conn *types.WebSocketConnection,
 				fmt.Printf("Unexpected Close Error: %v\n", err)
 
 				// unexepted connection errors, delete user from the community connection pool
-				delete(w.communityClientConns[documentId], *conn)
+				delete(wss.communityClientConns[documentId], *conn)
 			} else {
 				fmt.Printf("JSON Error: %v\n", err)
 
 				// remove client from connection
-				delete(w.communityClientConns[documentId], *conn)
+				delete(wss.communityClientConns[documentId], *conn)
 
 				break // only exits the loop, not entire function, allows for graceful exit
 
@@ -327,7 +245,95 @@ func (w *WebSocketService) ListenForWSCommunity(conn *types.WebSocketConnection,
 
 			log.Printf("payload: %+v", payload)
 
-			w.wsCommunityChan <- message
+			wss.wsCommunityChan <- message
 		}
 	}
+}
+
+func (wss *WebSocketService) actionHandler(event WebSocketInfo) error {
+	switch event.Action {
+	case "editor_list":
+
+		// get list of client for user
+		list, err := wss.getEditorList(event.SessionId)
+
+		if err != nil {
+			encodedErrMsg, _ := commprotocol.EncodeMessage(commprotocol.SYSTEM_MSG, fmt.Sprintf("Error when retrieving list of users: %v", err))
+
+			event.Conn.WriteMessage(websocket.BinaryMessage, encodedErrMsg)
+		}
+
+		wss.broadcastToAllClients(list, event.SessionId)
+
+	case "join_doc":
+		fmt.Printf("ADDING CLIENT %s and for SESSIONID %s\n", event.Value, event.SessionId)
+
+		// get user from db to store in current connection map
+		userId, err := strconv.ParseUint(event.Value, 10, 0)
+		if err != nil {
+			fmt.Printf("Error when attempting to parse uint from user id:\n", userId)
+		}
+
+		user, err := user.FindUserById(uint(userId))
+
+		if err != nil {
+			encodedErrMsg, _ := commprotocol.EncodeMessage(commprotocol.SYSTEM_MSG, fmt.Sprintf("Error when retrieving user with connected id: %v", err))
+			event.Conn.WriteMessage(websocket.BinaryMessage, encodedErrMsg)
+			return err
+		}
+
+		// add them to their respective live sessions under their own connections
+
+		existClientConnections, ok := wss.clientConnections[event.SessionId]
+
+		// initialize if map is empty, prevent nil pointer exceptions
+		if !ok {
+			existClientConnections = make(map[types.WebSocketConnection]string)
+			wss.clientConnections[event.SessionId] = existClientConnections
+		}
+
+		wss.clientConnections[event.SessionId][event.Conn] = user.Name
+
+		// encode message to binary
+		encodedMsg, err := commprotocol.EncodeMessage(commprotocol.JOIN, user.Name)
+		log.Println("encodedMessage:", encodedMsg)
+
+		if err != nil {
+			log.Printf("Error occured when attempting to encode message %s, err was %s", event.Value, err)
+		}
+
+		// get current editor client list in binary
+		encodedEditors, err := wss.getEditorList(event.SessionId)
+		fmt.Printf("encoded editor list %v\n", encodedEditors)
+
+		if err != nil {
+			encodedErrMsg, _ := commprotocol.EncodeMessage(commprotocol.SYSTEM_MSG, fmt.Sprintf("Error when retrieving list of users: %v", err))
+
+			event.Conn.WriteMessage(websocket.BinaryMessage, encodedErrMsg)
+		}
+
+		// send binary message to all users saying who has joined
+		wss.broadcastToAllClients(encodedMsg, event.SessionId)
+
+		// send list of current editors back to all clients
+		wss.broadcastToAllClients(encodedEditors, event.SessionId)
+
+	// when user disconnects
+	case "disconnected":
+		disconnectedUser := wss.clientConnections[event.SessionId][event.Conn]
+
+		fmt.Printf("User %s disconnected\n", disconnectedUser)
+
+		// close the channel
+		event.Conn.Close()
+
+		// new delete that user
+		delete(wss.clientConnections[event.SessionId], event.Conn)
+
+	default:
+		// not matching anything, we send back generic response
+		return fmt.Errorf("NO matching case.")
+	}
+
+	return nil
 }
