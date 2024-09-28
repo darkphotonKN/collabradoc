@@ -47,6 +47,7 @@ func (app *application) routes(wss *ws.WebSocketService) http.Handler {
 
 	// -- Docs Routes --
 	mux.Get("/api/doc/community", document.GetCommunityDocsHandler)
+	mux.Get("/api/doc/community/validate", document.ValidateCommunityDocHandler)
 	mux.With(auth.JWTMiddleware).Get("/api/doc", document.GetDocumentsHandler)
 	mux.With(auth.JWTMiddleware).Post("/api/doc", document.CreateDocHandler)
 	mux.With(auth.JWTMiddleware).Patch("/api/doc/privacy/{documentId}", document.ToggleDocPrivacyHandler)

@@ -17,6 +17,24 @@ func GetDocuments(userId uint) ([]model.Document, error) {
 	return QueryDocuments(userId)
 }
 
+func ValidateCommunityDocService(documentId uint) (ValidateCommunityDocRes, error) {
+	doc, err := QueryCommunityDoc(documentId)
+
+	if err != nil {
+		return ValidateCommunityDocRes{}, err
+	}
+
+	if doc.Privacy == public {
+		return ValidateCommunityDocRes{
+			IsCommunityDoc: true,
+		}, nil
+	}
+
+	return ValidateCommunityDocRes{
+		IsCommunityDoc: false,
+	}, nil
+}
+
 /**
 * Gets all community (public) documents.
 **/

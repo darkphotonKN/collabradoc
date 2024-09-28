@@ -85,3 +85,18 @@ func UpdateDocument(doc model.Document) (model.Document, error) {
 
 	return doc, nil
 }
+
+func QueryCommunityDoc(documentId uint) (model.Document, error) {
+	db := db.DBCon
+
+	var communityDoc model.Document
+
+	result := db.Where("id = ?", documentId).First(&communityDoc)
+
+	if result.Error != nil {
+		fmt.Printf("Error when attempting to query for a community doc: %s\n\n", result.Error)
+		return model.Document{}, result.Error
+	}
+
+	return communityDoc, nil
+}

@@ -164,3 +164,31 @@ func ToggleDocPrivacyHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)
 }
+
+func ValidateCommunityDocHandler(w http.ResponseWriter, r *http.Request) {
+	documentIdParam := chi.URLParam(r, "documentId")
+
+	documentId, err := strconv.ParseUint(documentIdParam, 10, 64)
+
+	if err != nil {
+		http.Error(w, "Could not decode documentId from param into uint64.", http.StatusBadRequest)
+		return
+	}
+
+	res, err := ValidateCommunityDocService(uint(documentId))
+
+	if err != nil {
+		http.Error(w, "Error when attempting to validate if doc is a community doc.", http.StatusBadRequest)
+		return
+	}
+
+	out, err := json.Marshal(res)
+
+	if err != nil {
+		http.Error(w, "Could not marshal json for response.", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
+}

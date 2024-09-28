@@ -147,6 +147,7 @@ func (wss *WebSocketService) ListenForWSChannel() {
 
 		// handle public websocket channel
 		case event := <-wss.wsCommunityChan:
+			fmt.Printf("Received Event: %+v\n", event)
 
 		case <-shutdown:
 			log.Println("Stopped listening to websocket channel.")
@@ -271,7 +272,7 @@ func (wss *WebSocketService) actionHandler(event WebSocketInfo) error {
 		// get user from db to store in current connection map
 		userId, err := strconv.ParseUint(event.Value, 10, 0)
 		if err != nil {
-			fmt.Printf("Error when attempting to parse uint from user id:\n", userId)
+			fmt.Printf("Error when attempting to parse uint from user id: %d\n", userId)
 		}
 
 		user, err := user.FindUserById(uint(userId))

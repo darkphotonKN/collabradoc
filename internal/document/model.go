@@ -32,3 +32,7 @@ type DocumentRes struct {
 	Privacy         string          `json:"privacy"`
 	AverageRating   float32         `json:"averageRating,omitempty"`
 }
+
+type ValidateCommunityDocRes struct {
+	IsCommunityDoc bool `json:"isCommunityDoc"`
+}
