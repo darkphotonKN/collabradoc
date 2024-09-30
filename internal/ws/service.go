@@ -208,7 +208,7 @@ func (wss *WebSocketService) ListenForWSCommunity(conn *types.WebSocketConnectio
 		fmt.Println("Connection closed.")
 	}()
 
-	log.Println("Listening for websocket connection. All session clients", wss.clientConnections)
+	log.Println("Listening for community websocket connections. All session clients", wss.clientConnections)
 
 	var payload WebSocketCommunityInfo
 
@@ -229,7 +229,6 @@ func (wss *WebSocketService) ListenForWSCommunity(conn *types.WebSocketConnectio
 				delete(wss.communityClientConns[documentId], *conn)
 
 				break // only exits the loop, not entire function, allows for graceful exit
-
 			}
 
 		} else {
@@ -243,9 +242,7 @@ func (wss *WebSocketService) ListenForWSCommunity(conn *types.WebSocketConnectio
 				DocumentID: documentId,
 				Conn:       *conn,
 			}
-
 			log.Printf("payload: %+v", payload)
-
 			wss.wsCommunityChan <- message
 		}
 	}

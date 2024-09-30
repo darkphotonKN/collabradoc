@@ -10,7 +10,6 @@ import (
 
 	"github.com/darkphotonKN/collabradoc/internal/types"
 	"github.com/darkphotonKN/collabradoc/internal/utils/auth"
-	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/websocket"
 )
@@ -56,8 +55,13 @@ func (wss *WebSocketService) WsCommunityHandler(w http.ResponseWriter, r *http.R
 		log.Println("Error when creating websocket connection.")
 	}
 
-	documentIdStr := chi.URLParam(r, "documentId")
+	documentIdStr := r.URL.Query().Get("documentId")
+
+	fmt.Println("community handler documentIdStr:", documentIdStr)
+
 	documentId, err := strconv.ParseUint(documentIdStr, 10, 0)
+
+	fmt.Println("community handler documentId:", documentId)
 
 	// -- Client Connected --
 	connectionPayload := WebSocketCommunityInfo{

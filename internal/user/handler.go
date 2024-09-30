@@ -12,10 +12,6 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type Player struct {
-	Name string
-}
-
 func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	users, err := FindAllUsers()

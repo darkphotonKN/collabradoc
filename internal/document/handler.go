@@ -175,6 +175,8 @@ func ValidateCommunityDocHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("Checking validity for documentId:", documentId)
+
 	res, err := ValidateCommunityDocService(uint(documentId))
 
 	if err != nil {
